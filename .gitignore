@@ -1,0 +1,5 @@
+application.yml
+build
+.gradle
+.idea
+postgres-data
