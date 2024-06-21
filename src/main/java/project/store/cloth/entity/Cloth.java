@@ -1,4 +1,4 @@
-package project.store.domain.cloth.entity;
+package project.store.cloth.entity;
 
 
 import jakarta.persistence.Column;

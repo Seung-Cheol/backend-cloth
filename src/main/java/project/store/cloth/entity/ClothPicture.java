@@ -1,4 +1,5 @@
-package project.store.domain.order;
+package project.store.cloth.entity;
+
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -7,27 +8,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import project.store.domain.cloth.entity.Cloth;
 
 @Entity
-public class OrderCloth {
+public class ClothPicture {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "order_cloth_id")
+  @Column(name = "cloth_picture_id")
   private Long id;
 
-  private int orderClothCount;
-
-  private int orderClothPrice;
-
-  @ManyToOne
-  @JoinColumn(name = "order_id")
-  private Order order;
+  private String clothPicture;
 
   @ManyToOne
   @JoinColumn(name = "cloth_id")
   private Cloth cloth;
-
 
 }

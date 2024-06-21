@@ -1,4 +1,4 @@
-package project.store.domain.order;
+package project.store.order;
 
 public enum OrderStatus {
   PAID,DELIVERY,COMPLETE,REFUND

@@ -1,26 +1,30 @@
-package project.store.domain.cloth.entity;
-
+package project.store.order;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import project.store.cloth.entity.Cloth;
+import project.store.member.domain.Member;
 
-@Entity
-public class ClothPicture {
+public class Wishlist {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "cloth_picture_id")
+  @Column(name = "wishlist_id")
   private Long id;
 
-  private String clothPicture;
+  private int wishlistClothCount;
+
+  private int wishlistClothPrice;
 
   @ManyToOne
   @JoinColumn(name = "cloth_id")
   private Cloth cloth;
 
+  @ManyToOne
+  @JoinColumn(name = "member_id")
+  private Member member;
 }

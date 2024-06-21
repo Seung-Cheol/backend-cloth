@@ -1,4 +1,4 @@
-package project.store.domain.review;
+package project.store.review;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
@@ -8,8 +8,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
-import project.store.domain.cloth.entity.Cloth;
-import project.store.domain.member.Member;
+import project.store.cloth.entity.Cloth;
+import project.store.member.domain.Member;
 
 public class Review {
 
