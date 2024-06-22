@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.store.member.api.dto.request.JoinRequestDto;
+import project.store.member.api.dto.response.CommonResponseDto;
 import project.store.member.service.MemberService;
 
 @RestController
@@ -20,21 +21,21 @@ public class MemberController {
   private final MemberService memberService;
 
   @PostMapping("/email/send")
-  public ResponseEntity<?> sendEmail(@Email String email) {
-    memberService.sendEmailCode(email);
-    return ResponseEntity.status(201).build();
+  public CommonResponseDto<?> sendEmail(@Email String email) {
+    String message = memberService.sendEmailCode(email);
+    return CommonResponseDto.of(message);
   }
 
   @PostMapping("/email/verify")
-  public ResponseEntity<?> verifyCode(String email, String authCode) {
+  public CommonResponseDto<?> verifyCode(String email, String authCode) {
     String message = memberService.verifyAuthCode(email,authCode);
-    return ResponseEntity.status(201).body(message);
+    return CommonResponseDto.of(message);
   }
 
   @PostMapping("/join")
-  public ResponseEntity<?> join(@Valid @RequestBody JoinRequestDto joinRequestDto) {
-
-    return ResponseEntity.status(201).build();
+  public CommonResponseDto<?> join(@Valid @RequestBody JoinRequestDto joinRequestDto) {
+    String message = memberService.joinMember(joinRequestDto);
+    return CommonResponseDto.of(message);
   }
 
 
