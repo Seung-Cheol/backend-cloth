@@ -3,6 +3,7 @@ package project.store.member.api.dto.request;
 
 import jakarta.persistence.Embedded;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,14 +17,19 @@ import project.store.common.util.EncryptUtil;
 public class JoinRequestDto {
 
   @Email
+  @NotNull
   private String email;
 
+  @NotNull
   private String nickname;
 
   @Embedded
   private MemberAddress memberAddress;
 
+  @NotNull
   private String password;
+
+  @NotNull
   private String phone;
 
   @Builder

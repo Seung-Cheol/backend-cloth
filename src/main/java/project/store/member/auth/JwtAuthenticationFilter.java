@@ -1,27 +1,44 @@
 package project.store.member.auth;
 
-import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
+import org.springframework.web.filter.GenericFilterBean;
 
-public class JwtAuthenticationFilter implements Filter {
-  private JwtTokenProvider jwtTokenProvider;
+public class JwtAuthenticationFilter extends GenericFilterBean {
+  private final JwtTokenProvider jwtTokenProvider;
+
+  public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+    this.jwtTokenProvider = jwtTokenProvider;
+  }
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
     throws IOException, ServletException {
-    String token = resolveToken((HttpServletRequest) request);
-    if(token != null && jwtTokenProvider.validateToken(token)) {
-      Authentication authentication = jwtTokenProvider.getAuthentication(token);
-      SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
+    try {
+      String token = resolveToken((HttpServletRequest) request);
+
+      if (
+        token != null &&
+          jwtTokenProvider.validateToken(token) &&
+          !jwtTokenProvider.isRefreshToken(token)
+      ) {
+        Authentication authentication = jwtTokenProvider.getAuthentication(token);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+      } else {
+        System.out.println("Invalid or missing token");
+        throw new SecurityException("Invalid or missing token");
+      }
+  } catch (SecurityException e) {
+    ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+  }
     chain.doFilter(request,response);
   }
 
@@ -33,7 +50,13 @@ public class JwtAuthenticationFilter implements Filter {
       return null;
     }
   }
-  public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
-    this.jwtTokenProvider = jwtTokenProvider;
+  private String resolveRefreshToken(HttpServletRequest request) {
+    String bearerToken = request.getHeader("RefreshToken");
+    if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
+      return bearerToken.substring(7);
+    } else {
+      return null;
+    }
   }
+
 }

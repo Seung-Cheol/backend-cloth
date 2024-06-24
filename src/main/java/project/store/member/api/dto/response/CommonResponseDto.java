@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Data
 public class CommonResponseDto<T> {
-  private String status;
+  private String status = "200";
   private String message;
   private T data;
 
@@ -16,16 +16,22 @@ public class CommonResponseDto<T> {
     this.data = data;
   }
 
+
   public CommonResponseDto(String message) {
     this.message = message;
+  }
+
+  public CommonResponseDto(String message, T data) {
+    this.message = message;
+    this.data = data;
   }
 
   public static <T> CommonResponseDto<T> ofFail(String message) {
     return new CommonResponseDto<>("FAIL", message, null);
   }
 
-  public static <T> CommonResponseDto<T> ofSuccess(String message) {
-    return new CommonResponseDto<>("SUCEESS", message, null);
+  public static <T> CommonResponseDto<T> ofSuccess(String message,T data) {
+    return new CommonResponseDto<>(message, data);
   }
 
   public static <T> CommonResponseDto<T> of(String message) {
