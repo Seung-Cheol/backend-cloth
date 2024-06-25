@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import project.store.common.util.EncryptUtil;
 import project.store.member.domain.Member;
-import project.store.member.domain.MemberRepository;
+import project.store.member.domain.repository.MemberRepository;
 
 @Service
 @RequiredArgsConstructor

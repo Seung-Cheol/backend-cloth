@@ -97,4 +97,6 @@ public class MemberController {
     return CommonResponseDto.of(message);
   }
 
+
+
 }

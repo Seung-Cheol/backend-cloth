@@ -8,7 +8,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
-import project.store.cloth.entity.Cloth;
+import project.store.cloth.domain.Cloth;
 import project.store.member.domain.Member;
 
 public class Review {

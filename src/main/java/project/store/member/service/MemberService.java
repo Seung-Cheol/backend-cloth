@@ -20,7 +20,7 @@ import project.store.member.api.dto.response.ViewMyPageResponseDto;
 import project.store.member.auth.JwtTokenProvider;
 import project.store.member.auth.TokenInfo;
 import project.store.member.domain.Member;
-import project.store.member.domain.MemberRepository;
+import project.store.member.domain.repository.MemberRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -83,7 +83,6 @@ public class MemberService {
   }
 
   public TokenInfo loginMember(LoginRequestDto loginRequestDto) {
-    System.out.println(loginRequestDto.getEmail() + " " + loginRequestDto.getPassword());
     UsernamePasswordAuthenticationToken authenticationToken =
       new UsernamePasswordAuthenticationToken(
         loginRequestDto.getEmail(),   loginRequestDto.getPassword()

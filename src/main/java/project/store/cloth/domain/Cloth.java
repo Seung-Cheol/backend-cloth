@@ -1,4 +1,4 @@
-package project.store.cloth.entity;
+package project.store.cloth.domain;
 
 
 import jakarta.persistence.Column;
@@ -10,33 +10,42 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import java.time.LocalDate;
+import java.util.List;
+import lombok.Getter;
+import org.springframework.data.annotation.CreatedDate;
 
 @Entity
+@Getter
 public class Cloth {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "member_id")
+  @Column(name = "cloth_id")
   private Long id;
 
   private String clothName;
-  @Lob
+
+  @Column(columnDefinition = "TEXT")
   private String clothContent;
+
+  private String thumbnail;
 
   private int price;
 
-  private int inventory;
-
-  @Enumerated(EnumType.STRING)
-  private ClothSize size;
-
+  @CreatedDate
   private LocalDate created_at;
 
-  @OneToOne
+  @ManyToOne
   @JoinColumn(name = "type_id")
   private ClothType clothType;
 
+  @OneToMany(mappedBy = "clothDetail")
+  private List<ClothDetail> clothDetails;
 
+  @OneToMany(mappedBy = "clothPicture")
+  private List<ClothPicture> clothPictures;
 }

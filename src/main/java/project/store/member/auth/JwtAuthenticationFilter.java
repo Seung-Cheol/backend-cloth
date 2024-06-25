@@ -33,7 +33,6 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         Authentication authentication = jwtTokenProvider.getAuthentication(token);
         SecurityContextHolder.getContext().setAuthentication(authentication);
       } else {
-        System.out.println("Invalid or missing token");
         throw new SecurityException("Invalid or missing token");
       }
   } catch (SecurityException e) {

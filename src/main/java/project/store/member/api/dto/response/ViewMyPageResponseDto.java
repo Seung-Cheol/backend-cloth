@@ -24,10 +24,9 @@ public class ViewMyPageResponseDto {
   private String nickname;
 
   @Embedded
-  @NotNull
   private MemberAddress memberAddress;
 
-  @NotNull
+  @NotBlank
   private String phone;
 
   public ViewMyPageResponseDto(String email, String nickname, MemberAddress memberAddress,

@@ -7,7 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import project.store.cloth.entity.Cloth;
+import project.store.cloth.domain.Cloth;
 
 @Entity
 public class OrderCloth {

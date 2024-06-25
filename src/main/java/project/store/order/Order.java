@@ -13,6 +13,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
 import project.store.member.domain.Member;
 
 @Entity
@@ -24,6 +26,7 @@ public class Order {
   @Column(name = "order_id")
   private Long id;
 
+  @CreationTimestamp
   private LocalDateTime orderDate;
 
   @Enumerated(EnumType.STRING)

@@ -70,7 +70,7 @@ public class SecurityConfig {
   @Bean
   public WebSecurityCustomizer webSecurityCustomizer() {
     return (web) -> web.ignoring()
-      .requestMatchers("/member/join", "/member/login", "/member/refresh");
+      .requestMatchers("/member/join", "/member/login", "/member/refresh", "/member/email/send", "/member/email/verify", "/cloth/**");
   }
 
   public SecurityConfig(JwtTokenProvider jwtTokenProvider) {

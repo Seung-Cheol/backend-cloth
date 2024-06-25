@@ -21,6 +21,7 @@ public class CommonResponseDto<T> {
     this.message = message;
   }
 
+
   public CommonResponseDto(String message, T data) {
     this.message = message;
     this.data = data;

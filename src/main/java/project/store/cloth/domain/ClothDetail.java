@@ -1,30 +1,32 @@
-package project.store.order;
+package project.store.cloth.domain;
+
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import project.store.cloth.domain.Cloth;
-import project.store.member.domain.Member;
+import jakarta.persistence.OneToOne;
 
-public class Wishlist {
+@Entity
+public class ClothDetail {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "wishlist_id")
+  @Column(name = "cloth_detail_id")
   private Long id;
 
-  private int wishlistClothCount;
+  private int inventory;
 
-  private int wishlistClothPrice;
+  @Enumerated(EnumType.STRING)
+  private ClothSize size;
 
   @ManyToOne
   @JoinColumn(name = "cloth_id")
   private Cloth cloth;
 
-  @ManyToOne
-  @JoinColumn(name = "member_id")
-  private Member member;
 }
