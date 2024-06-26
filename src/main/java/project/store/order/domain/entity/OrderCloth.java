@@ -1,4 +1,4 @@
-package project.store.order.domain;
+package project.store.order.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,32 +8,29 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.Builder;
-import lombok.Getter;
 import project.store.cloth.domain.ClothDetail;
-import project.store.member.domain.Member;
+import project.store.order.domain.entity.Order;
 
-@Getter
-@Builder
 @Entity
-public class WishList {
+@Builder
+public class OrderCloth {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "wishlist_id")
+  @Column(name = "order_cloth_id")
   private Long id;
 
-  private int wishlistClothCount;
+  private int orderClothCount;
+
+  private int orderClothPrice;
+
+  @ManyToOne
+  @JoinColumn(name = "order_id")
+  private Order order;
 
   @ManyToOne
   @JoinColumn(name = "cloth_detail_id")
   private ClothDetail clothDetail;
 
-  @ManyToOne
-  @JoinColumn(name = "member_id")
-  private Member member;
-
-  public void updateWishList(int wishlistClothCount) {
-    this.wishlistClothCount = wishlistClothCount;
-  }
 
 }

@@ -1,4 +1,4 @@
-package project.store.order.domain;
+package project.store.order.domain.entity;
 
 
 import jakarta.persistence.Column;
@@ -11,13 +11,18 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import project.store.member.domain.Member;
 
 @Entity
 @Table(name="orders")
+@Builder
 public class Order {
 
   @Id
@@ -38,5 +43,7 @@ public class Order {
   @JoinColumn(name = "member_id")
   private Member member;
 
+  @OneToMany(mappedBy = "order")
+  private List<OrderCloth> orderCloths = new ArrayList<>();
 
 }

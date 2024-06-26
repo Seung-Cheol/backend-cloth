@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.store.member.api.dto.response.CommonResponseDto;
 import project.store.member.auth.CustomMember;
-import project.store.order.api.dto.WishListAddRequestDto;
-import project.store.order.api.dto.WishListResponseDto;
-import project.store.order.api.dto.WishListUpdateRequestDto;
+import project.store.order.api.dto.request.WishListAddRequestDto;
+import project.store.order.api.dto.response.WishListResponseDto;
+import project.store.order.api.dto.request.WishListUpdateRequestDto;
 import project.store.order.service.WishListService;
 
 @RestController

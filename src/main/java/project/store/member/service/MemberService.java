@@ -136,4 +136,8 @@ public class MemberService {
     });
     return "비밀번호 변경 성공";
   }
+
+  public Member findMemberById(Long id) {
+    return memberRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 회원이 없습니다."));
+  }
 }

@@ -1,16 +1,12 @@
-package project.store.order.api.dto;
+package project.store.order.api.dto.response;
 
 
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
 import project.store.cloth.domain.Cloth;
 import project.store.cloth.domain.ClothDetail;
 import project.store.cloth.domain.ClothSize;
-import project.store.member.domain.Member;
-import project.store.order.domain.WishList;
+import project.store.order.domain.entity.WishList;
 
 @Data
 @Builder

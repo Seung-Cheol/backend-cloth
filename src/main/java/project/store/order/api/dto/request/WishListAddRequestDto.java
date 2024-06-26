@@ -1,4 +1,4 @@
-package project.store.order.api.dto;
+package project.store.order.api.dto.request;
 
 
 import jakarta.validation.constraints.Min;

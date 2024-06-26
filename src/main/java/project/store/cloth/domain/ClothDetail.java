@@ -33,4 +33,8 @@ public class ClothDetail {
   @JoinColumn(name = "cloth_id")
   private Cloth cloth;
 
+  public void updateInventory(int count) {
+    this.inventory -= count;
+  }
+
 }
