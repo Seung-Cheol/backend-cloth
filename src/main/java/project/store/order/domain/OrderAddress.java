@@ -1,4 +1,4 @@
-package project.store.order;
+package project.store.order.domain;
 
 import jakarta.persistence.Embeddable;
 

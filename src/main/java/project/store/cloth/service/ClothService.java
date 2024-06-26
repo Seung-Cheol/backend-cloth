@@ -26,30 +26,14 @@ public class ClothService {
     Pageable pageable = PageRequest.of(page - 1, 20);
     Page<Cloth> clothesPage = clothRepository.findAllLimit(pageable);
     List<Cloth> clothes = clothesPage.getContent();
-    List<ClothListResponseDto> clothList = clothes.stream().map(cloth ->
-      ClothListResponseDto.builder()
-        .id(cloth.getId())
-        .clothName(cloth.getClothName())
-        .thumbnail(cloth.getThumbnail())
-        .price(cloth.getPrice())
-        .clothType(cloth.getClothType())
-        .build()).collect(Collectors.toList());
+    List<ClothListResponseDto> clothList =
+      clothes.stream().map(ClothListResponseDto::toDto).collect(Collectors.toList());
     return clothList;
   }
 
   public ClothDetailResponseDto getClothDetail(Long id) {
     Cloth cloth = clothRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 상품이 없습니다."));
-    ClothDetailResponseDto clothDetail = ClothDetailResponseDto.builder()
-      .id(cloth.getId())
-      .clothName(cloth.getClothName())
-      .clothContent(cloth.getClothContent())
-      .thumbnail(cloth.getThumbnail())
-      .price(cloth.getPrice())
-      .created_at(cloth.getCreated_at())
-      .clothType(cloth.getClothType())
-      .clothDetails(cloth.getClothDetails())
-      .clothPictures(cloth.getClothPictures())
-      .build();
+    ClothDetailResponseDto clothDetail = ClothDetailResponseDto.toDto(cloth);
     return clothDetail;
   }
 }

@@ -1,8 +1,6 @@
 package project.store.member.api.dto.response;
 
-import java.time.LocalDateTime;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 @Data
 public class CommonResponseDto<T> {
@@ -31,7 +29,7 @@ public class CommonResponseDto<T> {
     return new CommonResponseDto<>("FAIL", message, null);
   }
 
-  public static <T> CommonResponseDto<T> ofSuccess(String message,T data) {
+  public static <T> CommonResponseDto<T> ofData(String message,T data) {
     return new CommonResponseDto<>(message, data);
   }
 

@@ -1,4 +1,4 @@
-package project.store.order;
+package project.store.order.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -7,7 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import project.store.cloth.domain.Cloth;
+import project.store.cloth.domain.ClothDetail;
+import project.store.order.domain.Order;
 
 @Entity
 public class OrderCloth {
@@ -26,8 +27,8 @@ public class OrderCloth {
   private Order order;
 
   @ManyToOne
-  @JoinColumn(name = "cloth_id")
-  private Cloth cloth;
+  @JoinColumn(name = "cloth_detail_id")
+  private ClothDetail clothDetail;
 
 
 }

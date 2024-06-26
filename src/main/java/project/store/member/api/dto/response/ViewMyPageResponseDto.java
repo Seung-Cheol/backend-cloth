@@ -37,7 +37,7 @@ public class ViewMyPageResponseDto {
     this.phone = phone;
   }
 
-  public ViewMyPageResponseDto toDto(Member member, EncryptUtil encryptUtil) {
+  public static ViewMyPageResponseDto toDto(Member member, EncryptUtil encryptUtil) {
     return ViewMyPageResponseDto.builder()
       .email(encryptUtil.decrypt(member.getEmail()))
       .nickname(member.getNickname())

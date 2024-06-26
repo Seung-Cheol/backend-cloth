@@ -1,4 +1,4 @@
-package project.store.order;
+package project.store.order.domain;
 
 
 import jakarta.persistence.Column;
@@ -14,7 +14,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.annotation.CreatedDate;
 import project.store.member.domain.Member;
 
 @Entity

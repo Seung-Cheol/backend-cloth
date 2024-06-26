@@ -43,9 +43,9 @@ public class Cloth {
   @JoinColumn(name = "type_id")
   private ClothType clothType;
 
-  @OneToMany(mappedBy = "clothDetail")
+  @OneToMany(mappedBy = "cloth")
   private List<ClothDetail> clothDetails;
 
-  @OneToMany(mappedBy = "clothPicture")
+  @OneToMany(mappedBy = "cloth")
   private List<ClothPicture> clothPictures;
 }

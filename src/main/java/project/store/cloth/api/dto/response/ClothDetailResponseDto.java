@@ -13,6 +13,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
+import project.store.cloth.domain.Cloth;
 import project.store.cloth.domain.ClothDetail;
 import project.store.cloth.domain.ClothPicture;
 import project.store.cloth.domain.ClothType;
@@ -32,15 +33,21 @@ public class ClothDetailResponseDto {
   private List<ClothDetail> clothDetails;
   private List<ClothPicture> clothPictures;
 
-  public ClothDetailResponseDto(Long id, String clothName, String clothContent, String thumbnail, int price, LocalDate created_at, ClothType clothType, List<ClothDetail> clothDetails, List<ClothPicture> clothPictures) {
-    this.id = id;
-    this.clothName = clothName;
-    this.clothContent = clothContent;
-    this.thumbnail = thumbnail;
-    this.price = price;
-    this.created_at = created_at;
-    this.clothType = clothType;
-    this.clothDetails = clothDetails;
-    this.clothPictures = clothPictures;
+  public static ClothDetailResponseDto toDto(Cloth cloth) {
+    if (cloth == null) {
+      throw new IllegalArgumentException("옷 정보가 없습니다.");
+    }
+
+    return ClothDetailResponseDto.builder()
+        .id(cloth.getId())
+        .clothName(cloth.getClothName())
+        .clothContent(cloth.getClothContent())
+        .thumbnail(cloth.getThumbnail())
+        .price(cloth.getPrice())
+        .created_at(cloth.getCreated_at())
+        .clothType(cloth.getClothType())
+        .clothDetails(cloth.getClothDetails())
+        .clothPictures(cloth.getClothPictures())
+        .build();
   }
 }

@@ -116,7 +116,7 @@ public class MemberService {
 
   public ViewMyPageResponseDto viewMyPage(Long id) {
     Optional<Member> member = memberRepository.findById(id);
-    return new ViewMyPageResponseDto().toDto(member.orElseThrow(), encryptUtil);
+    return ViewMyPageResponseDto.toDto(member.orElseThrow(), encryptUtil);
   }
 
   public Optional<Member> updateMyPage(Long id, UpdateMyPageRequestDto updateMyPageRequestDto) {
