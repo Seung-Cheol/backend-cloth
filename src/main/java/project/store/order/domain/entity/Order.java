@@ -17,12 +17,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
+import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 import project.store.member.domain.Member;
 
 @Entity
 @Table(name="orders")
 @Builder
+@Getter
 public class Order {
 
   @Id
@@ -39,11 +41,19 @@ public class Order {
   @Embedded
   private OrderAddress orderAddress;
 
+  private LocalDateTime deliveryDate;
+
+  private LocalDateTime refundDate;
+
   @ManyToOne
   @JoinColumn(name = "member_id")
   private Member member;
 
   @OneToMany(mappedBy = "order")
   private List<OrderCloth> orderCloths = new ArrayList<>();
+
+  public void updateStatus(OrderStatus status) {
+    this.orderStatus = status;
+  }
 
 }

@@ -140,4 +140,11 @@ public class MemberService {
   public Member findMemberById(Long id) {
     return memberRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 회원이 없습니다."));
   }
+  public void updatePoint(Long id, int point) {
+    Optional<Member> member = memberRepository.findById(id);
+    member.ifPresent(value -> {
+      value.setPoint(point);
+      memberRepository.save(value);
+    });
+  }
 }

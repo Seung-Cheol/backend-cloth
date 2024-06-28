@@ -2,10 +2,8 @@ package project.store.cloth.service;
 
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.apache.kafka.common.quota.ClientQuotaAlteration.Op;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +12,6 @@ import project.store.cloth.api.dto.response.ClothDetailResponseDto;
 import project.store.cloth.api.dto.response.ClothListResponseDto;
 import project.store.cloth.domain.Cloth;
 import project.store.cloth.domain.ClothDetail;
-import project.store.cloth.domain.ClothPicture;
 import project.store.cloth.domain.repository.ClothDetailRepository;
 import project.store.cloth.domain.repository.ClothRepository;
 
@@ -40,9 +37,15 @@ public class ClothService {
     return clothDetail;
   }
 
-  public void updateInventory(Long clothDetailId, int quantity) {
+  public void minusInventory(Long clothDetailId, int quantity) {
     ClothDetail clothDetail = clothDetailRepository.findById(clothDetailId).orElseThrow(() -> new IllegalArgumentException("해당 상품이 없습니다."));
-    clothDetail.updateInventory(quantity);
+    clothDetail.minusInventory(quantity);
+    clothDetailRepository.save(clothDetail);
+  }
+
+  public void plusInventory(Long clothDetailId, int quantity) {
+    ClothDetail clothDetail = clothDetailRepository.findById(clothDetailId).orElseThrow(() -> new IllegalArgumentException("해당 상품이 없습니다."));
+    clothDetail.plusInventory(quantity);
     clothDetailRepository.save(clothDetail);
   }
 

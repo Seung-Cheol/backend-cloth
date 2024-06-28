@@ -29,6 +29,7 @@ public class Member {
   @Embedded
   private MemberAddress memberAddress;
   private String phone;
+  private int point;
   @Enumerated(EnumType.STRING)
   private MemberRole role;
 

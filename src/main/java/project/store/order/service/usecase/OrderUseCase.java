@@ -2,11 +2,10 @@ package project.store.order.service.usecase;
 
 
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import project.store.cloth.api.dto.response.ClothDetailResponseDto;
-import project.store.cloth.domain.ClothDetail;
 import project.store.cloth.service.ClothService;
 import project.store.member.domain.Member;
 import project.store.member.service.MemberService;
@@ -54,7 +53,7 @@ public class OrderUseCase {
 
     //재고 처리한다
     for (WishList wishList : wishLists) {
-      clothService.updateInventory(wishList.getClothDetail().getId(), wishList.getWishlistClothCount());
+      clothService.minusInventory(wishList.getClothDetail().getId(), wishList.getWishlistClothCount());
     }
 
     //주문 상세 넣는다 (OrderClothTable)
@@ -71,6 +70,14 @@ public class OrderUseCase {
 
     //카트에서 제거
     wishListService.deleteWishListByIds(dto.getWishListIds());
+
+    //포인트 차감
+    int totalPrice = orderClothDtos.stream().mapToInt(OrderClothDto::getPrice).sum();
+    if(totalPrice > member.getPoint()) {
+      return "포인트가 부족합니다.";
+    } else {
+      memberService.updatePoint(member.getId(), member.getPoint() - totalPrice);
+    }
 
 
     return "주문 추가 성공";
@@ -95,7 +102,7 @@ public class OrderUseCase {
     }
 
     //재고 처리한다
-    clothService.updateInventory(dto.getClothDetailId(), dto.getQuantity());
+    clothService.minusInventory(dto.getClothDetailId(), dto.getQuantity());
 
     //주문 상세 넣는다 (OrderClothTable)
     OrderClothDto orderClothDto = OrderClothDto.builder()
@@ -105,7 +112,60 @@ public class OrderUseCase {
       .clothDetail(clothService.getDetailEntity(dto.getClothDetailId()))
       .build();
 
+    //멤버 포인트를 낮춘다
+    if(orderClothDto.getPrice() > member.getPoint()) {
+      return "포인트가 부족합니다.";
+    } else {
+      memberService.updatePoint(member.getId(), member.getPoint() - orderClothDto.getPrice());
+    }
+
     return "주문 추가 성공";
   }
+
+
+  @Transactional
+  public String cancelOrder(Long orderId, Long memberId) {
+
+    Order order = orderService.getOrderById(orderId);
+    if(order.getOrderStatus()!=OrderStatus.PAID) {
+      return "취소는 배송 전에만 가능합니다.";
+    }
+
+    //주문 상태 변경
+    orderService.updateOrderStatus(orderId, OrderStatus.CANCEL);
+
+    //Order Detail 갯수 가져오고 재고증가
+    orderService.getOrderClothByOrderId(orderId).forEach(orderCloth -> {
+      clothService.plusInventory(orderCloth.getClothDetail().getId(), orderCloth.getOrderClothCount());
+      memberService.updatePoint(memberId, memberService.findMemberById(memberId).getPoint() + orderCloth.getOrderClothPrice());
+    });
+
+    return "주문이 취소되었습니다.";
+  }
+
+  @Transactional
+  public String refundOrder(Long orderId, Long memberId) {
+    Order order = orderService.getOrderById(orderId);
+    if(order.getOrderStatus()!=OrderStatus.COMPLETE) {
+      return "환불은 배송 후 가능합니다.";
+    }
+
+    if (LocalDateTime.now().isBefore(order.getDeliveryDate().plusDays(1))) {
+      return "환불은 배송 완료 후 1일 이내에만 가능합니다.";
+    }
+
+    //주문 상태 변경
+    orderService.updateOrderStatus(orderId, OrderStatus.REFUND);
+
+    //Order Detail 갯수 가져오고 재고증가
+    orderService.getOrderClothByOrderId(orderId).forEach(orderCloth -> {
+      clothService.plusInventory(orderCloth.getClothDetail().getId(), orderCloth.getOrderClothCount());
+      memberService.updatePoint(memberId, memberService.findMemberById(memberId).getPoint() + orderCloth.getOrderClothPrice());
+    });
+
+    return "주문이 환불되었습니다.";
+  }
+
+
 
 }

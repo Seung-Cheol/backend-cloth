@@ -12,6 +12,7 @@ import project.store.member.api.dto.response.CommonResponseDto;
 import project.store.member.auth.CustomMember;
 import project.store.order.api.dto.request.OrderFromWishListRequestDto;
 import project.store.order.api.dto.request.OrderRequestDto;
+import project.store.order.domain.entity.Order;
 import project.store.order.service.OrderService;
 import project.store.order.service.usecase.OrderUseCase;
 
@@ -40,18 +41,22 @@ public class OrderController {
   }
 
   @GetMapping("/list")
-  public CommonResponseDto<String> getOrderList(@AuthenticationPrincipal CustomMember customMember) {
-//    orderService.getOrderList(customMember.getId());
-    return CommonResponseDto.ofData("성공", "주문 조회 성공");
+  public CommonResponseDto<Order> getOrderList(@AuthenticationPrincipal CustomMember customMember) {
+    Order data = orderService.orderByMemberId(customMember.getId());
+    return CommonResponseDto.ofData("성공", data);
   }
 
   @PutMapping("cancel")
-  public CommonResponseDto<String> cancelOrder() {
+  public CommonResponseDto<String> cancelOrder(
+    Long orderId, @AuthenticationPrincipal CustomMember customMember) {
+    String message = orderUseCase.cancelOrder(orderId,customMember.getId());
     return CommonResponseDto.ofData("성공", "주문 취소 성공");
   }
 
   @PutMapping("refund")
-  public CommonResponseDto<String> refundOrder() {
+  public CommonResponseDto<String> refundOrder(
+    Long orderId, @AuthenticationPrincipal CustomMember customMember
+  ) {
     return CommonResponseDto.ofData("성공", "주문 환불 성공");
   }
 
