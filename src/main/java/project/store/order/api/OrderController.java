@@ -50,14 +50,15 @@ public class OrderController {
   public CommonResponseDto<String> cancelOrder(
     Long orderId, @AuthenticationPrincipal CustomMember customMember) {
     String message = orderUseCase.cancelOrder(orderId,customMember.getId());
-    return CommonResponseDto.ofData("성공", "주문 취소 성공");
+    return CommonResponseDto.of(message);
   }
 
   @PutMapping("refund")
   public CommonResponseDto<String> refundOrder(
     Long orderId, @AuthenticationPrincipal CustomMember customMember
   ) {
-    return CommonResponseDto.ofData("성공", "주문 환불 성공");
+    String message = orderUseCase.refundOrder(orderId, customMember.getId());
+    return CommonResponseDto.of(message);
   }
 
 }
