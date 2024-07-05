@@ -37,7 +37,7 @@ public class Member {
   }
 
   public Member(Long id, String email, String nickname, String password, MemberAddress memberAddress, String phone,
-    MemberRole role) {
+    int point, MemberRole role) {
     this.id = id;
     this.email = email;
     this.nickname = nickname;
@@ -45,5 +45,6 @@ public class Member {
     this.memberAddress = memberAddress;
     this.phone = phone;
     this.role = role;
+    this.point = point;
   }
 }

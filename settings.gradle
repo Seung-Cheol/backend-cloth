@@ -1,7 +1,8 @@
-pluginManagement {
-	repositories {
-		maven { url 'https://repo.spring.io/snapshot' }
-		gradlePluginPortal()
-	}
-}
 rootProject.name = 'cloth'
+include 'member-service'
+include 'cloth-service'
+include 'order-service'
+include 'gateway-service'
+include 'discovery-service'
+include 'payment-service'
+
