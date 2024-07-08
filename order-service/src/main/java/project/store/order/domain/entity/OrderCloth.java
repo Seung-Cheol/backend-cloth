@@ -9,10 +9,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Builder
 @Getter
+@NoArgsConstructor
 public class OrderCloth {
 
   @Id
@@ -28,5 +30,11 @@ public class OrderCloth {
 
   private Long clothDetailId;
 
+  public OrderCloth(Long id, int orderClothCount, Order order, Long clothDetailId) {
+    this.id = id;
+    this.orderClothCount = orderClothCount;
+    this.order = order;
+    this.clothDetailId = clothDetailId;
+  }
 
 }

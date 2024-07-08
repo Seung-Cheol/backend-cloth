@@ -12,10 +12,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Builder
 @Getter
+@NoArgsConstructor
 public class ClothDetail {
 
   @Id
@@ -36,4 +38,10 @@ public class ClothDetail {
     this.inventory += count;
   }
 
+  public ClothDetail(Long id, int inventory, ClothSize size, Cloth cloth) {
+    this.id = id;
+    this.inventory = inventory;
+    this.size = size;
+    this.cloth = cloth;
+  }
 }

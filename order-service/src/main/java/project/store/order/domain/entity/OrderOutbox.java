@@ -1,6 +1,6 @@
-package project.store.domain;
+package project.store.order.domain.entity;
 
-import jakarta.persistence.Column;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -8,27 +8,29 @@ import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import project.store.order.kafka.dto.ClothDetailDto;
 
 @Entity
 @Builder
 @Getter
 @NoArgsConstructor
-public class PaymentOutbox {
+public class OrderOutbox {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "payment_outbox_id")
-  public Long id;
-  public Long orderId;
-  public String topic;
-  public boolean isSent;
+  private Long id;
+  private String topic;
+  private String message;
+  private boolean isSent;
 
-  public PaymentOutbox(Long id, Long orderId, String topic, boolean isSent) {
+  public OrderOutbox(Long id,String topic, String message, boolean isSent) {
     this.topic = topic;
-    this.isSent = isSent;
-    this.orderId = orderId;
+    this.message = message;
+    this.isSent = false;
   }
 
   public void isSent() {
     this.isSent = true;
   }
+
 }

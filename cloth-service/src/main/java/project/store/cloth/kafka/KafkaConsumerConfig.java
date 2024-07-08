@@ -1,5 +1,4 @@
-package project.store.order.kafka;
-
+package project.store.cloth.kafka;
 
 import java.util.HashMap;
 import java.util.Map;

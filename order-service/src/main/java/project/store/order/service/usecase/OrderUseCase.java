@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import project.store.order.api.dto.request.OrderFromWishListRequestDto;
 import project.store.order.api.dto.request.OrderRequestDto;
 import project.store.order.client.ClothServiceClient;
-import project.store.order.client.MemberServiceClient;
 import project.store.order.domain.entity.Order;
 import project.store.order.domain.entity.OrderStatus;
 import project.store.order.domain.entity.WishList;
@@ -23,8 +22,6 @@ import project.store.order.service.dto.OrderDto;
 @Component
 public class OrderUseCase {
   private final WishListService wishListService;
-  private final MemberServiceClient memberServiceClient;
-  private final ClothServiceClient clothServiceClient;
   private final OrderService orderService;
 
 
@@ -62,7 +59,7 @@ public class OrderUseCase {
     OrderDto orderInfo = OrderDto.builder()
       .orderAddress(dto.getOrderAddress())
       .memberId(memberId)
-      .orderStatus(OrderStatus.PAID)
+      .orderStatus(OrderStatus.INITIATED)
       .build();
     Order order = orderService.createOrder(orderInfo);
 
@@ -72,6 +69,8 @@ public class OrderUseCase {
       .order(order)
       .clothDetailId(dto.getClothDetailId())
       .build();
+
+    System.out.println(orderClothDto.getClothDetailId());
 
     orderService.createOrderCloth(new ArrayList<>(List.of(orderClothDto)));
 
@@ -91,9 +90,6 @@ public class OrderUseCase {
     orderService.updateOrderStatus(orderId, OrderStatus.CANCEL);
 
     //Order Detail 갯수 가져오고 재고증가
-    orderService.getOrderClothByOrderId(orderId).forEach(orderCloth -> {
-      clothServiceClient.updateInventory(orderCloth.getClothDetailId(), orderCloth.getOrderClothCount());
-    });
 
     return "주문이 취소되었습니다.";
   }
@@ -112,10 +108,6 @@ public class OrderUseCase {
     //주문 상태 변경
     orderService.updateOrderStatus(orderId, OrderStatus.REFUND);
 
-    //Order Detail 갯수 가져오고 재고증가
-    orderService.getOrderClothByOrderId(orderId).forEach(orderCloth -> {
-      clothServiceClient.updateInventory(orderCloth.getClothDetailId(), orderCloth.getOrderClothCount());
-    });
 
     return "주문이 환불되었습니다.";
   }

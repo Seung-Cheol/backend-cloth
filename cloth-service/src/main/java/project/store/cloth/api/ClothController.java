@@ -2,13 +2,14 @@ package project.store.cloth.api;
 
 
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import project.store.cloth.api.dto.response.ClothDetailResponseDto;
+import project.store.cloth.api.dto.response.ClothResponseDto;
 import project.store.cloth.api.dto.response.ClothListResponseDto;
 import project.store.cloth.common.CommonResponseDto;
 import project.store.cloth.service.ClothService;
@@ -22,13 +23,23 @@ public class ClothController {
   @GetMapping("/list")
   public CommonResponseDto<List<ClothListResponseDto>> getClothList(int page) {
     List<ClothListResponseDto> clothList = clothService.getClothList(page);
-    return CommonResponseDto.ofData("성공", clothList);
+    return CommonResponseDto.ofSuccess(clothList);
   }
 
   @GetMapping("/detail/{clothId}")
-  public CommonResponseDto<ClothDetailResponseDto> getClothDetail(@PathVariable Long clothId) {
-    ClothDetailResponseDto cloth = clothService.getClothDetail(clothId);
-    return CommonResponseDto.ofData("성공", cloth);
+  public CommonResponseDto<ClothResponseDto> getClothDetail(@PathVariable Long clothId) {
+    ClothResponseDto cloth = clothService.getClothDetail(clothId);
+    return CommonResponseDto.ofSuccess(cloth);
   }
 
+  @GetMapping("/inventory")
+  public CommonResponseDto<Map<Long, Integer>> getInventory(@RequestBody List<Long> clothDetailIds) {
+    Map<Long, Integer> inventoryMap = clothService.getInventory(clothDetailIds);
+    return CommonResponseDto.ofSuccess(inventoryMap);
+  }
+
+  @GetMapping("/details")
+  public CommonResponseDto<?> getClothDetails(@RequestBody List<Long> clothDetailIds) {
+    return CommonResponseDto.ofSuccess(clothService.getClothDetails(clothDetailIds));
+  }
 }

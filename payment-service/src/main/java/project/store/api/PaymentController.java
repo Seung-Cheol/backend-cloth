@@ -21,7 +21,7 @@ public class PaymentController {
   private final PaymentService paymentService;
 
   @PostMapping
-  public CommonResponseDto<?> PendingPayment(
+  public CommonResponseDto<?> pendingPayment(
     @RequestHeader("id") Long memberId,
     @RequestBody PaymentRequestDto paymentRequestDto
     ) {

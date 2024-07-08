@@ -42,8 +42,7 @@ public class SecurityConfig {
       .exceptionHandling(e -> e.authenticationEntryPoint(jwtAuthenticationEntryPoint))
       .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
         .pathMatchers("/member/join", "/member/login","/member/refresh","/member/email/**","/cloth/**").permitAll()
-        .pathMatchers("/member/**", "/order/**", "/wishlist/**").hasRole("ROLE_USER")
-
+        .pathMatchers("/member/**", "/order/**", "/wishlist/**", "/payment/**").hasRole("ROLE_USER")
         .anyExchange().authenticated())
       .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
       .httpBasic(HttpBasicSpec::disable)

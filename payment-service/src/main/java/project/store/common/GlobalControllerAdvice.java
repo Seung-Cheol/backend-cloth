@@ -15,6 +15,7 @@ public class GlobalControllerAdvice {
 
   @ExceptionHandler(Exception.class)
   public CommonResponseDto<?> handleGlobalException(Exception e) {
+    e.printStackTrace();
     return CommonResponseDto.ofFail("400","알 수 없는 오류 발생");
   }
 

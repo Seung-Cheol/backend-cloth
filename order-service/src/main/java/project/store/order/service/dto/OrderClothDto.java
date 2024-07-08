@@ -14,8 +14,6 @@ public class OrderClothDto {
   @Min(1)
   private int quantity;
 
-  private int price;
-
   private Order order;
 
   private Long clothDetailId;

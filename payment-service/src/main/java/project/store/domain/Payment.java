@@ -9,12 +9,14 @@ import jakarta.persistence.Id;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UpdateTimestamp;
 
 
 @Entity
 @Builder
 @Getter
+@NoArgsConstructor
 public class Payment {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +29,7 @@ public class Payment {
   @UpdateTimestamp
   private LocalDateTime completedAt;
 
-  public Payment(Long id, Long orderId, Long memberId, int price, PaymentStatus status) {
+  public Payment(Long id, Long orderId, Long memberId, int price, PaymentStatus status, LocalDateTime completedAt) {
     this.id = id;
     this.orderId = orderId;
     this.memberId = memberId;
