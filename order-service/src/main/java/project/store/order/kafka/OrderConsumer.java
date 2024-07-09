@@ -22,31 +22,38 @@ public class OrderConsumer {
   private final OrderOutboxRepository orderOutboxRepository;
   private final OrderProducer orderProducer;
   private final String topic = "order_complete";
+  private final String rollbackTopic = "payment_rollback";
 
   @KafkaListener(topics = "payment_complete")
   @Transactional
   public void consume(String message) throws JsonProcessingException {
-    Long orderId = Long.parseLong(message);
     List<ClothDetailDto> dtos = new ArrayList<>();
-    orderRepository.findById(orderId).ifPresent(order -> {
-      order.getOrderCloths().forEach(orderCloth -> {
-        dtos.add(ClothDetailDto.builder()
-          .orderId(order.getId())
-          .clothDetailId(orderCloth.getClothDetailId())
-          .quantity(orderCloth.getOrderClothCount())
-          .build());
-      });
-      order.updateStatus(OrderStatus.PAID);
-      orderRepository.save(order);
-    });
-
     ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      Long orderId = Long.parseLong(message);
+      orderRepository.findById(orderId).ifPresent(order -> {
+        order.getOrderCloths().forEach(orderCloth -> {
+          dtos.add(ClothDetailDto.builder()
+            .orderId(order.getId())
+            .clothDetailId(orderCloth.getClothDetailId())
+            .quantity(orderCloth.getOrderClothCount())
+            .build());
+        });
+        order.updateStatus(OrderStatus.PAID);
+        orderRepository.save(order);
+      });
       orderOutboxRepository.save(OrderOutbox.builder()
         .topic(topic)
         .message(objectMapper.writeValueAsString(dtos))
         .isSent(false)
         .build());
-
+    } catch (Exception e) {
+      orderOutboxRepository.save(OrderOutbox.builder()
+        .topic(rollbackTopic)
+        .message(message)
+        .isSent(false)
+        .build());
+    }
     orderProducer.send();
     }
 }

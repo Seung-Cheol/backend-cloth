@@ -26,7 +26,7 @@ public class PaymentService {
   }
 
 
-  //@Transactional
+  @Transactional
   public void completePayment(Long orderId) {
     Payment payment = paymentRepository.findByOrderId(orderId).orElseThrow(() -> new CustomException(PaymentExceptionEnum.ORDER_NOT_FOUND));
 

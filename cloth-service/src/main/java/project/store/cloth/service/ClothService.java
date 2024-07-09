@@ -40,11 +40,6 @@ public class ClothService {
     return clothDetail;
   }
 
-  public void updateInventory(Long clothDetailId, int quantity) {
-    ClothDetail clothDetail = clothDetailRepository.findById(clothDetailId).orElseThrow(() -> new IllegalArgumentException("해당 상품이 없습니다."));
-    clothDetail.updateInventory(quantity);
-    clothDetailRepository.save(clothDetail);
-  }
 
 
   public ClothDetail getDetailEntity(Long clothDetailId) {
