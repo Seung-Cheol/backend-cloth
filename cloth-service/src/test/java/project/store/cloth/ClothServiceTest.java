@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import project.store.cloth.api.dto.response.ClothListResponseDto;
+import project.store.cloth.api.dto.response.ClothResponseDto;
 import project.store.cloth.common.util.RedisUtil;
 import project.store.cloth.domain.Cloth;
 import project.store.cloth.domain.ClothDetail;
@@ -55,6 +56,14 @@ public class ClothServiceTest {
         clothRepository,
         clothDetailRepository
       );
+
+      옷상세정보 = ClothDetail.builder()
+        .id(1L)
+        .inventory(100)
+        .size(ClothSize.S)
+        .cloth(옷정보)
+        .build();
+
       옷정보 = Cloth.builder()
         .id(1L)
         .clothName("[30대 구매 1위] 데님 팬츠")
@@ -65,13 +74,7 @@ public class ClothServiceTest {
         .startAt(LocalDateTime.now())
         .created_at(LocalDate.now())
         .clothType(new ClothType(1L, "바지"))
-        .build();
-
-      옷상세정보 = ClothDetail.builder()
-        .id(1L)
-        .inventory(100)
-        .size(ClothSize.S)
-        .cloth(옷정보)
+        .clothDetails(Arrays.asList(옷상세정보))
         .build();
     }
 
@@ -96,11 +99,13 @@ public class ClothServiceTest {
       when(clothRepository.findById(1L)).thenReturn(java.util.Optional.of(옷정보));
 
       //when
-      Cloth cloth = clothService.getClothDetail(1L);
+      ClothResponseDto clothDetail = clothService.getClothDetail(1L);
 
       //then
-      assertEquals(cloth.getClothName(), 옷정보.getClothName());
+      assertEquals(clothDetail.getClothDetails().get(0).getInventory(), 옷상세정보.getInventory());
     }
+
+
 
 
 }

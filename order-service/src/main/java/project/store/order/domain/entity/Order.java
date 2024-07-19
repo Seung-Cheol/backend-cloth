@@ -14,6 +14,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ import org.hibernate.annotations.CreationTimestamp;
 @Builder
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class Order {
 
   @Id
@@ -54,15 +56,4 @@ public class Order {
     this.orderStatus = status;
   }
 
-  public Order(Long id, LocalDateTime orderDate, OrderStatus orderStatus, OrderAddress orderAddress,
-    LocalDateTime deliveryDate, LocalDateTime refundDate, Long memberId,
-    List<OrderCloth> orderCloths) {
-    this.id = id;
-    this.orderDate = orderDate;
-    this.orderStatus = orderStatus;
-    this.orderAddress = orderAddress;
-    this.deliveryDate = deliveryDate;
-    this.refundDate = refundDate;
-    this.memberId = memberId;
-  }
 }

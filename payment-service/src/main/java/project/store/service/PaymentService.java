@@ -21,8 +21,8 @@ public class PaymentService {
   private final PaymentOutboxRepository paymentOutboxRepository;
   private final PaymentProducer paymentProducer;
   private final String topic = "payment_complete";
-  public void PendingPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
-    paymentRepository.save(paymentRequestDto.toEntity(memberId));
+  public Payment PendingPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
+    return paymentRepository.save(paymentRequestDto.toEntity(memberId));
   }
 
 

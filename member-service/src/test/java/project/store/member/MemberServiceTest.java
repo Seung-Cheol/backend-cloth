@@ -26,9 +26,9 @@ import project.store.member.domain.Member;
 import project.store.member.domain.repository.MemberRepository;
 import project.store.member.service.MemberService;
 
-  @SpringBootTest
-  @Transactional
-  @ActiveProfiles("test")
+@SpringBootTest
+@Transactional
+@ActiveProfiles("test")
 public class MemberServiceTest {
 
   @Autowired
