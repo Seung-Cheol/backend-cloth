@@ -28,7 +28,7 @@ public class FilterConfig {
         .filters(f -> f.addRequestHeader("first-request", "first-request-header-by-java")
           .addResponseHeader("first-response", "first-response-header-from-java")
         )
-        .uri("http://localhost:8082"))
+        .uri("http://localhost:8085"))
       .route(r -> r.path("/cloth/**")
         .filters(f -> f.addRequestHeader("first-request", "first-request-header-by-java")
           .addResponseHeader("first-response", "first-response-header-from-java")

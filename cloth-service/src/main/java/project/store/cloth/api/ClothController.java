@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.Mapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,13 +34,13 @@ public class ClothController {
     return CommonResponseDto.ofSuccess(cloth);
   }
 
-  @GetMapping("/inventory")
+  @PostMapping("/inventory")
   public CommonResponseDto<Map<Long, Integer>> getInventory(@RequestBody List<Long> clothDetailIds) {
     Map<Long, Integer> inventoryMap = clothService.getInventory(clothDetailIds);
     return CommonResponseDto.ofSuccess(inventoryMap);
   }
 
-  @GetMapping("/details")
+  @PostMapping("/details")
   public CommonResponseDto<?> getClothDetails(@RequestBody List<Long> clothDetailIds) {
     return CommonResponseDto.ofSuccess(clothService.getClothDetails(clothDetailIds));
   }

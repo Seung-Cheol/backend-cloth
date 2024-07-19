@@ -47,6 +47,15 @@ public class RedisUtil {
     }
   }
 
+  public boolean existListData(String key, String value) {
+    if(existData(key)) {
+      List<String> arr  = getListData(key);
+      return arr.contains(value);
+    }
+    return false;
+  }
+
+
   public void deleteListData(String key, String value, long duration) {
     if(existData(key)) {
       List<String> arr  = getListData(key);

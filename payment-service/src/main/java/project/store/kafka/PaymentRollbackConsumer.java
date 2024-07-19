@@ -5,12 +5,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-import project.store.common.CustomException;
-import project.store.common.PaymentExceptionEnum;
+import project.store.common.exception.CustomException;
+import project.store.common.exception.PaymentExceptionEnum;
 import project.store.domain.Payment;
 import project.store.domain.PaymentStatus;
 import project.store.domain.repository.PaymentRepository;
-import project.store.service.PaymentService;
 
 @Component
 @RequiredArgsConstructor

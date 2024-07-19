@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import project.store.cloth.api.dto.response.ClothDetailResponseDto;
 import project.store.cloth.api.dto.response.ClothResponseDto;
 import project.store.cloth.api.dto.response.ClothListResponseDto;
+import project.store.cloth.common.exception.ClothExceptionEnum;
+import project.store.cloth.common.exception.CustomException;
 import project.store.cloth.domain.Cloth;
 import project.store.cloth.domain.ClothDetail;
 import project.store.cloth.domain.repository.ClothDetailRepository;
@@ -35,7 +37,8 @@ public class ClothService {
   }
 
   public ClothResponseDto getClothDetail(Long id) {
-    Cloth cloth = clothRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 상품이 없습니다."));
+    Cloth cloth = clothRepository.findById(id).orElseThrow(() -> new CustomException(
+      ClothExceptionEnum.CLOTH_NOT_FOUND));
     ClothResponseDto clothDetail = ClothResponseDto.toDto(cloth);
     return clothDetail;
   }
@@ -44,7 +47,7 @@ public class ClothService {
 
   public ClothDetail getDetailEntity(Long clothDetailId) {
     ClothDetail clothDetail = clothDetailRepository.findById(clothDetailId)
-      .orElseThrow(() -> new IllegalArgumentException("해당 상품이 없습니다."));
+      .orElseThrow(() -> new CustomException(ClothExceptionEnum.CLOTH_NOT_FOUND));
     return clothDetail;
   }
 
@@ -52,7 +55,7 @@ public class ClothService {
     Map<Long, Integer> inventoryMap = new HashMap<>();
     for (Long id : clothDetailIds) {
       ClothDetail clothDetail = clothDetailRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Invalid clothDetailId: " + id));
+        .orElseThrow(() -> new CustomException(ClothExceptionEnum.CLOTH_NOT_FOUND));
       inventoryMap.put(id, clothDetail.getInventory());
     }
     return inventoryMap;

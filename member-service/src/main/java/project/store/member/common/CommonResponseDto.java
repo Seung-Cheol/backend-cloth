@@ -1,11 +1,13 @@
 package project.store.member.common;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class CommonResponseDto<T> {
   private String status = "200";
-  private String message;
+  private String message = "SUCCESS";
   private T data;
 
   public CommonResponseDto(String status, String message, T data) {
@@ -15,25 +17,22 @@ public class CommonResponseDto<T> {
   }
 
 
-  public CommonResponseDto(String message) {
-    this.message = message;
-  }
-
-
-  public CommonResponseDto(String message, T data) {
-    this.message = message;
+  public CommonResponseDto(T data) {
     this.data = data;
   }
 
-  public static <T> CommonResponseDto<T> ofFail(String message) {
-    return new CommonResponseDto<>("FAIL", message, null);
+
+  public CommonResponseDto(String status, String message) {
+    this.status = status;
+    this.message = message;
   }
 
-  public static <T> CommonResponseDto<T> ofData(String message,T data) {
-    return new CommonResponseDto<>(message, data);
+  public static <T> CommonResponseDto<T> ofFail(String status, String message) {
+    return new CommonResponseDto<>(status, message);
   }
 
-  public static <T> CommonResponseDto<T> of(String message) {
-    return new CommonResponseDto<>(message);
+  public static <T> CommonResponseDto<T> ofSuccess(T data) {
+    return new CommonResponseDto<>(data);
   }
 }
+

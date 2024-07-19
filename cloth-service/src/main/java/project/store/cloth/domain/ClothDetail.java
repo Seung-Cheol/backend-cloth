@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class ClothDetail {
 
   @Id
@@ -38,10 +40,4 @@ public class ClothDetail {
     this.inventory += count;
   }
 
-  public ClothDetail(Long id, int inventory, ClothSize size, Cloth cloth) {
-    this.id = id;
-    this.inventory = inventory;
-    this.size = size;
-    this.cloth = cloth;
-  }
 }

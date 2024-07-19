@@ -3,12 +3,15 @@ package project.store.order.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import project.store.order.domain.entity.Order;
 import project.store.order.domain.entity.OrderOutbox;
 import project.store.order.domain.entity.OrderStatus;
 import project.store.order.domain.repository.OrderOutboxRepository;
@@ -27,33 +30,37 @@ public class OrderConsumer {
   @KafkaListener(topics = "payment_complete")
   @Transactional
   public void consume(String message) throws JsonProcessingException {
-    List<ClothDetailDto> dtos = new ArrayList<>();
     ObjectMapper objectMapper = new ObjectMapper();
+    Long orderId = Long.parseLong(message);
     try {
-      Long orderId = Long.parseLong(message);
-      orderRepository.findById(orderId).ifPresent(order -> {
-        order.getOrderCloths().forEach(orderCloth -> {
-          dtos.add(ClothDetailDto.builder()
-            .orderId(order.getId())
-            .clothDetailId(orderCloth.getClothDetailId())
-            .quantity(orderCloth.getOrderClothCount())
-            .build());
-        });
-        order.updateStatus(OrderStatus.PAID);
-        orderRepository.save(order);
-      });
-      orderOutboxRepository.save(OrderOutbox.builder()
-        .topic(topic)
-        .message(objectMapper.writeValueAsString(dtos))
-        .isSent(false)
-        .build());
+      Order order = orderRepository.findById(orderId)
+        .orElseThrow(() -> new EntityNotFoundException("Order not found for ID: " + orderId));
+
+      List<ClothDetailDto> dtos = order.getOrderCloths().stream()
+        .map(orderCloth -> ClothDetailDto.builder()
+          .orderId(order.getId())
+          .clothDetailId(orderCloth.getClothDetailId())
+          .quantity(orderCloth.getOrderClothCount())
+          .build())
+        .collect(Collectors.toList());
+
+      order.updateStatus(OrderStatus.PAID);
+      orderRepository.save(order);
+
+      saveOrderOutbox(topic, objectMapper.writeValueAsString(dtos));
     } catch (Exception e) {
-      orderOutboxRepository.save(OrderOutbox.builder()
-        .topic(rollbackTopic)
-        .message(message)
-        .isSent(false)
-        .build());
+      saveOrderOutbox(rollbackTopic, message);
+      throw e;
     }
     orderProducer.send();
-    }
+  }
+
+  private void saveOrderOutbox(String topic, String message) {
+    OrderOutbox outboxEntry = OrderOutbox.builder()
+      .topic(topic)
+      .message(message)
+      .isSent(false)
+      .build();
+    orderOutboxRepository.save(outboxEntry);
+  }
 }

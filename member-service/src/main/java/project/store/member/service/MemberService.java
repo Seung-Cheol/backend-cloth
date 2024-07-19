@@ -1,5 +1,6 @@
 package project.store.member.service;
 
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,9 +13,16 @@ import org.springframework.stereotype.Service;
 import project.store.member.api.dto.request.JoinRequestDto;
 import project.store.member.api.dto.request.LoginRequestDto;
 import project.store.member.api.dto.request.UpdateMyPageRequestDto;
+import project.store.member.api.dto.response.ClothDetailResponseDto;
+import project.store.member.api.dto.response.OrderListResponseDto;
 import project.store.member.api.dto.response.ViewMyPageResponseDto;
+import project.store.member.api.dto.response.WishListResponseDto;
 import project.store.member.auth.JwtTokenProvider;
 import project.store.member.auth.TokenInfo;
+import project.store.member.client.OrderServiceClient;
+import project.store.member.common.CommonResponseDto;
+import project.store.member.common.exception.CustomException;
+import project.store.member.common.exception.MemberExceptionEnum;
 import project.store.member.common.util.EmailUtil;
 import project.store.member.common.util.EncryptUtil;
 import project.store.member.common.util.RedisUtil;
@@ -28,6 +36,7 @@ public class MemberService {
   @Value("${auth.mail.mark}")
   private String authMark;
 
+  private final OrderServiceClient orderServiceClient;
   private final EmailUtil emailUtil;
   private final RedisUtil redisUtil;
   private final MemberRepository memberRepository;
@@ -40,9 +49,9 @@ public class MemberService {
     return String.valueOf((int)(Math.random() * (90000) + 100000));// (int) Math.random() * (최댓값-최소값+1) + 최소값
   }
   @Async
-  public String sendEmailCode(String email)  {
+  public void sendEmailCode(String email)  {
     memberRepository.findByEmail(email).ifPresent(member -> {
-      throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+      throw new CustomException(MemberExceptionEnum.MEMBER_ALREADY_EXISTS);
     });
 
     try {
@@ -52,103 +61,89 @@ public class MemberService {
       String body = "";
       body += "요청하신 인증 번호는 " + number + " 입니다.";
       emailUtil.sendEmail(email, title, body);
-      return "메일 전송에 성공하였습니다.";
     } catch (Exception e) {
-      return "메일 전송에 실패했습니다. 다시 시도해주세요.";
+      throw new CustomException(MemberExceptionEnum.EMAIL_SEND_FAIL);
     }
   }
 
-  public String verifyAuthCode(String email, String authCode) {
-    String message = "";
+  public void verifyAuthCode(String email, String authCode) {
     if(redisUtil.getData(email) != null && redisUtil.getData(email).equals(authCode)) {
-      message += "이메일 인증이 완료되었습니다.";
       redisUtil.setDataExpire(email,authMark,1800);
     } else {
-      message += "인증번호가 유효하지 않습니다.";
+      throw new CustomException(MemberExceptionEnum.EMAIL_CODE_NOT_MATCH);
     }
-    return message;
   }
 
-  public String joinMember(JoinRequestDto joinRequestDto) {
+  public Member joinMember(JoinRequestDto joinRequestDto) {
     String emailAuthResult = redisUtil.getData(joinRequestDto.getEmail());
     if(emailAuthResult == null || !emailAuthResult.equals(authMark)) {
-      return "이메일 인증 다시 시도 요구";
+      throw new CustomException(MemberExceptionEnum.EMAIL_CODE_NOT_MATCH);
     } else {
       joinRequestDto.passwordEncoding(passwordEncoder);
       joinRequestDto.userInfoEncrypt(encryptUtil);
-      memberRepository.save(joinRequestDto.toEntity());
-      return "회원가입 완료";
+      return memberRepository.save(joinRequestDto.toEntity());
     }
   }
 
   public TokenInfo loginMember(LoginRequestDto loginRequestDto) {
-    UsernamePasswordAuthenticationToken authenticationToken =
-      new UsernamePasswordAuthenticationToken(
-        loginRequestDto.getEmail(),   loginRequestDto.getPassword()
-    );
-    Authentication authentication = authenticationManager.authenticate(authenticationToken);
-    return jwtTokenProvider.createToken(authentication);
+    try {
+      UsernamePasswordAuthenticationToken authenticationToken =
+        new UsernamePasswordAuthenticationToken(
+          loginRequestDto.getEmail(), loginRequestDto.getPassword()
+        );
+      Authentication authentication = authenticationManager.authenticate(authenticationToken);
+      return jwtTokenProvider.createToken(authentication);
+    } catch (Exception e) {
+      throw new CustomException(MemberExceptionEnum.LOGIN_FAILED);
+    }
   }
 
-  public TokenInfo refreshToken(String refreshToken) {
-    if(jwtTokenProvider.validateToken(refreshToken)) {
+  public TokenInfo refreshToken(Long memberId, String refreshToken) {
+    if(jwtTokenProvider.validateToken(refreshToken) && redisUtil.existListData(String.valueOf(memberId), refreshToken)) {
       TokenInfo token = jwtTokenProvider.refreshToken(refreshToken);
       return token;
     } else {
-      return null;
+      throw new CustomException(MemberExceptionEnum.REFRESH_TOKEN_EXPIRED);
     }
   }
 
-  public String logout(String email, String refreshToken) {
-    if(jwtTokenProvider.validateToken(refreshToken)) {
-     redisUtil.deleteListData(encryptUtil.encrypt(email), refreshToken, 30);
-      return "로그아웃 성공";
-    } else {
-      return "로그아웃 실패";
-    }
+  public void logout(Long memberId, String refreshToken) {
+     redisUtil.deleteListData(String.valueOf(memberId), refreshToken, 30);
   }
 
-  public String logoutAll(String email) {
-      redisUtil.deleteData(encryptUtil.encrypt(email));
-      return "로그아웃 성공";
+  public void logoutAll(Long memberId) {
+      redisUtil.deleteData(String.valueOf(memberId));
   }
 
   public ViewMyPageResponseDto viewMyPage(Long id) {
     Optional<Member> member = memberRepository.findById(id);
-    return ViewMyPageResponseDto.toDto(member.orElseThrow(), encryptUtil);
+    return ViewMyPageResponseDto.toDto(member.orElseThrow(
+      () -> new CustomException(MemberExceptionEnum.MEMBER_NOT_FOUND)
+    ), encryptUtil);
   }
 
-  public Optional<Member> updateMyPage(Long id, UpdateMyPageRequestDto updateMyPageRequestDto) {
-    Optional<Member> member = memberRepository.findById(id);
-    member.ifPresent(value -> {
-      updateMyPageRequestDto.toUpdateEntity(value, encryptUtil);
-      memberRepository.save(value);
-    });
-    return member;
+  public void updateMyPage(Long id, UpdateMyPageRequestDto updateMyPageRequestDto) {
+    Member member = memberRepository.findById(id).orElseThrow(
+      () -> new CustomException(MemberExceptionEnum.MEMBER_NOT_FOUND));
+      updateMyPageRequestDto.toUpdateEntity(member, encryptUtil);
+      memberRepository.save(member);
   }
 
-  public String changePassword(Long id, String password) {
-    Optional<Member> member = memberRepository.findById(id);
-    member.ifPresent(value -> {
-      value.setPassword(passwordEncoder.encode(password));
-      memberRepository.save(value);
-    });
-    return "비밀번호 변경 성공";
+  public void changePassword(Long id, String password) {
+    Member member = memberRepository.findById(id).orElseThrow(
+      () -> new CustomException(MemberExceptionEnum.MEMBER_NOT_FOUND));
+      member.setPassword(passwordEncoder.encode(password));
+      memberRepository.save(member);
   }
 
-  public Member findMemberById(Long id) {
-    return memberRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 회원이 없습니다."));
-  }
-  public void updatePoint(Long id, int point) {
-    Optional<Member> member = memberRepository.findById(id);
-    member.ifPresent(value -> {
-      value.minusPoint(point);
-      memberRepository.save(value);
-    });
+  public List<OrderListResponseDto> getMyOrderList(Long id) {
+    CommonResponseDto<List<OrderListResponseDto>> list = orderServiceClient.getOrderList(id);
+    return list.getData();
   }
 
-  public int getPoint(Long id) {
-    Optional<Member> member = memberRepository.findById(id);
-    return member.map(Member::getPoint).orElseThrow(() -> new IllegalArgumentException("해당 회원이 없습니다."));
+  public List<WishListResponseDto> getMyWishList(Long id) {
+    CommonResponseDto<List<WishListResponseDto>> list = orderServiceClient.getWishList(id);
+    return list.getData();
   }
+
 }

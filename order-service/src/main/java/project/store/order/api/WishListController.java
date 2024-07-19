@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,9 +34,9 @@ public class WishListController {
     return new CommonResponseDto<>();
   }
 
-  @GetMapping("/list")
+  @GetMapping("/list/{memberId}")
   public CommonResponseDto<List<WishListResponseDto>> getWishList(
-    @RequestHeader("id") Long memberId) {
+    @PathVariable Long memberId) {
     List<WishListResponseDto> data = wishListService.getWishList(memberId);
     return CommonResponseDto.ofSuccess(data);
   }
