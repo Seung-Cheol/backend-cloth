@@ -17,8 +17,12 @@ import project.store.cloth.common.exception.ClothExceptionEnum;
 import project.store.cloth.common.exception.CustomException;
 import project.store.cloth.domain.Cloth;
 import project.store.cloth.domain.ClothDetail;
+import project.store.cloth.domain.ClothOutbox;
 import project.store.cloth.domain.repository.ClothDetailRepository;
+import project.store.cloth.domain.repository.ClothOutboxRepository;
 import project.store.cloth.domain.repository.ClothRepository;
+import project.store.cloth.kafka.ClothProducer;
+import project.store.cloth.lock.DistributedLock;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +30,11 @@ public class ClothService {
 
   private final ClothRepository clothRepository;
   private final ClothDetailRepository clothDetailRepository;
+  private final ClothOutboxRepository clothOutboxRepository;
+  private final ClothProducer clothProducer;
+
+  private final static String ORDER_ROLLBACK = "order_rollback";
+  private final static String PAYMENT_ROLLBACK = "payment_rollback";
 
   public List<ClothListResponseDto> getClothList(int page) {
     Pageable pageable = PageRequest.of(page - 1, 20);
@@ -67,5 +76,31 @@ public class ClothService {
       .map(ClothDetailResponseDto::toDto)
       .collect(Collectors.toList());
     return clothDetailResponseDtos;
+  }
+
+  @DistributedLock(key = "#clothDetailId")
+  public void updateInventory(Long orderId, Long clothDetailId, int quantity) {
+    try {
+      System.out.println("start");
+      ClothDetail clothDetail = clothDetailRepository.findById(clothDetailId)
+        .orElseThrow(() -> new CustomException(ClothExceptionEnum.CLOTH_NOT_FOUND));
+      if(clothDetail.getInventory() < quantity) {
+        throw new CustomException(ClothExceptionEnum.INVENTORY_NOT_ENOUGH);
+      }
+      clothDetail.updateInventory(clothDetail.getInventory() - quantity);
+      clothDetailRepository.save(clothDetail);
+    } catch (Exception e) {
+      clothOutboxRepository.save(ClothOutbox.builder()
+        .topic(ORDER_ROLLBACK)
+        .message(orderId.toString())
+        .isSent(false)
+        .build());
+      clothOutboxRepository.save(ClothOutbox.builder()
+        .topic(PAYMENT_ROLLBACK)
+        .message(orderId.toString())
+        .isSent(false)
+        .build());
+      clothProducer.send();
+    }
   }
 }

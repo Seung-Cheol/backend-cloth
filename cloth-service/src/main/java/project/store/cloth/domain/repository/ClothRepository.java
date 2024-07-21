@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import project.store.cloth.domain.Cloth;
 
 
-@Repository
 public interface ClothRepository extends JpaRepository<Cloth, Long> {
 
   @Query("SELECT c FROM Cloth c ORDER BY c.created_at")

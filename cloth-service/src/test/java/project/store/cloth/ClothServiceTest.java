@@ -11,6 +11,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +33,9 @@ import project.store.cloth.domain.ClothDetail;
 import project.store.cloth.domain.ClothSize;
 import project.store.cloth.domain.ClothType;
 import project.store.cloth.domain.repository.ClothDetailRepository;
+import project.store.cloth.domain.repository.ClothOutboxRepository;
 import project.store.cloth.domain.repository.ClothRepository;
+import project.store.cloth.kafka.ClothProducer;
 import project.store.cloth.service.ClothService;
 
 
@@ -40,7 +46,10 @@ public class ClothServiceTest {
 
     private ClothRepository clothRepository;
     private ClothDetailRepository clothDetailRepository;
+    private ClothOutboxRepository clothOutboxRepository;
+    private ClothProducer clothProducer;
     private ClothService clothService;
+
 
 
     private Cloth 옷정보;
@@ -52,9 +61,13 @@ public class ClothServiceTest {
       //mocking
       clothRepository = Mockito.mock(ClothRepository.class);
       clothDetailRepository = Mockito.mock(ClothDetailRepository.class);
+      clothOutboxRepository = Mockito.mock(ClothOutboxRepository.class);
+      clothProducer = Mockito.mock(ClothProducer.class);
       clothService = new ClothService(
         clothRepository,
-        clothDetailRepository
+        clothDetailRepository,
+        clothOutboxRepository,
+        clothProducer
       );
 
       옷상세정보 = ClothDetail.builder()
@@ -104,8 +117,6 @@ public class ClothServiceTest {
       //then
       assertEquals(clothDetail.getClothDetails().get(0).getInventory(), 옷상세정보.getInventory());
     }
-
-
 
 
 }

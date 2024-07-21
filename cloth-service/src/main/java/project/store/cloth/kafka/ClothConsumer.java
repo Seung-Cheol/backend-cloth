@@ -14,6 +14,7 @@ import project.store.cloth.domain.ClothDetail;
 import project.store.cloth.domain.ClothOutbox;
 import project.store.cloth.domain.repository.ClothDetailRepository;
 import project.store.cloth.domain.repository.ClothOutboxRepository;
+import project.store.cloth.lock.DistributedLock;
 import project.store.cloth.service.ClothService;
 
 @Component
@@ -22,6 +23,7 @@ public class ClothConsumer {
 
   private final ClothDetailRepository clothDetailRepository;
   private final ClothOutboxRepository clothOutboxRepository;
+  private final ClothService clothService;
   private final ClothProducer clothProducer;
 
   @KafkaListener(topics = "order_complete")
@@ -32,28 +34,9 @@ public class ClothConsumer {
       list.forEach(
         map -> {
           Long clothDetailId = Long.parseLong(map.get("clothDetailId").toString());
+          Long orderId = Long.parseLong(map.get("orderId").toString());
           int quantity = Integer.parseInt(map.get("quantity").toString());
-          try {
-            ClothDetail clothDetail = clothDetailRepository.findById(clothDetailId)
-              .orElseThrow(() -> new RuntimeException("Cloth detail not found for ID: " + clothDetailId));
-            clothDetail.updateInventory(clothDetail.getInventory() - quantity);
-            ClothDetail savedClothDetail = clothDetailRepository.save(clothDetail);
-            if (savedClothDetail == null) {
-              throw new RuntimeException("Failed to save cloth detail for ID: " + clothDetailId);
-            }
-          } catch (Exception e) {
-            clothOutboxRepository.save(ClothOutbox.builder()
-              .topic("order_rollback")
-              .message(map.get("orderId").toString())
-              .isSent(false)
-              .build());
-            clothOutboxRepository.save(ClothOutbox.builder()
-              .topic("payment_rollback")
-              .message(map.get("orderId").toString())
-              .isSent(false)
-              .build());
-            clothProducer.send();
-          }
+          clothService.updateInventory(orderId, clothDetailId, quantity);
     });
 
 

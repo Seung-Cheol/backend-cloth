@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,6 +28,7 @@ public class ClothDetail {
   @Column(name = "cloth_detail_id")
   private Long id;
 
+  @Min(0)
   private int inventory;
 
   @Enumerated(EnumType.STRING)
@@ -37,7 +39,8 @@ public class ClothDetail {
   private Cloth cloth;
 
   public void updateInventory(int count) {
-    this.inventory += count;
+    System.out.println(count);
+    this.inventory = count;
   }
 
 }

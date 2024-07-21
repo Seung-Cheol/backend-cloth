@@ -5,7 +5,9 @@ import lombok.Getter;
 
 @Getter
 public enum ClothExceptionEnum { // 예외 발생시, body에 실어 날려줄 상태, code, message 커스텀
-  CLOTH_NOT_FOUND("430", "CLOTH_001", "해당 상품이 존재하지 않습니다.");
+  CLOTH_NOT_FOUND("430", "CLOTH_001", "해당 상품이 존재하지 않습니다."),
+  INVENTORY_NOT_ENOUGH("430", "CLOTH_002", "재고가 부족합니다."),
+  CLOTH_NOT_UPDATE("430", "CLOTH_003", "상품 정보를 수정할 수 없습니다.");
 
 
   // 1. status = 날려줄 상태코드
