@@ -9,10 +9,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import project.store.order.api.dto.request.OrderFromWishListRequestDto;
 import project.store.order.api.dto.request.OrderRequestDto;
+import project.store.order.api.dto.response.ClothDetailResponseDto;
 import project.store.order.client.ClothServiceClient;
+import project.store.order.common.exception.CustomException;
+import project.store.order.common.exception.OrderExceptionEnum;
+import project.store.order.common.util.RedisUtil;
 import project.store.order.domain.entity.Order;
 import project.store.order.domain.entity.OrderStatus;
 import project.store.order.domain.entity.WishList;
+import project.store.order.lock.DistributedLock;
 import project.store.order.service.OrderService;
 import project.store.order.service.WishListService;
 import project.store.order.service.dto.OrderClothDto;
@@ -24,6 +29,7 @@ public class OrderFacade {
   private final WishListService wishListService;
   private final OrderService orderService;
   private final ClothServiceClient clothServiceClient;
+  private final RedisUtil redisUtil;
 
 
   @Transactional
@@ -53,7 +59,13 @@ public class OrderFacade {
   }
 
   @Transactional
+  @DistributedLock(key = "#dto.clothDetailId")
   public void orderFromDetail(OrderRequestDto dto, Long memberId) {
+    //재고 차감
+    boolean result = redisUtil.decreaseStock(String.valueOf(dto.getClothDetailId()), dto.getQuantity());
+    if (!result) {
+      throw new CustomException(OrderExceptionEnum.CLOTH_INVENTORY_NOT_ENOUGH);
+    }
 
     //주문 생성
     OrderDto orderInfo = OrderDto.builder()
@@ -69,7 +81,6 @@ public class OrderFacade {
       .order(order)
       .clothDetailId(dto.getClothDetailId())
       .build();
-
     orderService.createOrderCloth(new ArrayList<>(List.of(orderClothDto)));
 
   }
