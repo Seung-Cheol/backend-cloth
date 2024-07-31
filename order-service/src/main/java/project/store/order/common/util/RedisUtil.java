@@ -9,7 +9,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 @Component
@@ -22,23 +21,20 @@ public class RedisUtil {
     return Boolean.TRUE.equals(redisTemplate.hasKey(key));
   }
 
-  public Mono<Boolean> decreaseStock(String key, int count) {
-    return Mono.fromCallable(() -> {
-      ValueOperations<String, String> valueOperations = template.opsForValue();
-      int stock = Integer.parseInt(valueOperations.get(key));
-      if (stock < count) {
-        return false;
-      }
-      valueOperations.decrement(key, count);
-      return true;
-    });
+  public boolean decreaseStock(String key, int count) {
+    ValueOperations<String, String> valueOperations = template.opsForValue();
+    int stock = Integer.parseInt(valueOperations.get(key));
+    if (stock < count) {
+      return false;
+    }
+    valueOperations.decrement(key, count);
+    return true;
   }
 
-  public Mono<Void> increaseStock(String key, int count) {
-    return Mono.fromRunnable(() -> {
-      ValueOperations<String, String> valueOperations = template.opsForValue();
-      valueOperations.increment(key, count);
-    });
+  public boolean increaseStock(String key, int count) {
+    ValueOperations<String, String> valueOperations = template.opsForValue();
+    valueOperations.increment(key, count);
+    return true;
   }
 
   public void setData(String key, String value) {

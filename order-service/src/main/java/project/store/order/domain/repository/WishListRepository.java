@@ -1,19 +1,20 @@
 package project.store.order.domain.repository;
 
 import java.util.List;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import project.store.order.domain.entity.WishList;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-@Repository
-public interface WishListRepository extends ReactiveCrudRepository<WishList, Long> {
 
-  Flux<WishList> findAllByMemberId(Long memberId);
+public interface WishListRepository extends JpaRepository<WishList, Long> {
 
-  Mono<WishList> findByIdAndMemberId(Long wishListId, Long memberId);
+  List<WishList> findAllByMemberId(Long memberId);
 
-  Flux<WishList> findByIdIn(List<Long> wishListIds);
+  Optional<WishList> findByIdAndMemberId(Long wishListId, Long memberId);
+
+  @Query("select w from WishList w where w.id in :wishListIds")
+  List<WishList> findByIds(Long[] wishListIds);
 
 }

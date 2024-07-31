@@ -8,7 +8,6 @@ import project.store.order.domain.entity.Order;
 import project.store.order.domain.entity.OrderStatus;
 import project.store.order.domain.repository.OrderRepository;
 import project.store.order.service.OrderService;
-import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
@@ -20,11 +19,9 @@ public class OrderRollbackConsumer {
   @KafkaListener(topics = "order_rollback")
   public void consumeOrderRollback(String message) {
     Long orderId = Long.parseLong(message);
-    orderRepository.findById(orderId)
-      .switchIfEmpty(Mono.error(new IllegalArgumentException("주문 정보가 없습니다.")))
-      .doOnNext(order -> order.updateStatus(OrderStatus.CANCEL))
-      .flatMap(orderRepository::save)
-      .subscribe();
+    Order order = orderRepository.findById(orderId).orElseThrow(() -> new IllegalArgumentException("주문 정보가 없습니다."));
+    order.updateStatus(OrderStatus.CANCEL);
+    orderRepository.save(order);
   }
 
 }

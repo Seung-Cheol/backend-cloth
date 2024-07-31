@@ -21,8 +21,6 @@ import project.store.order.domain.repository.OrderClothRepository;
 import project.store.order.domain.repository.OrderRepository;
 import project.store.order.service.dto.OrderClothDto;
 import project.store.order.service.dto.OrderDto;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -32,59 +30,63 @@ public class OrderService {
   private final OrderClothRepository orderClothRepository;
   private final ClothServiceClient clothServiceClient;
 
-  public Mono<Order> createOrder(OrderDto orderDto) {
-    return Mono.fromCallable(() -> orderRepository.save(orderDto.createOrder(orderDto)).block());
+  public Order createOrder(OrderDto orderDto) {
+    return orderRepository.save(orderDto.createOrder(orderDto));
   }
 
-  public Mono<Void> createOrderCloth(List<OrderClothDto> orderClothDtos) {
-    return Flux.fromIterable(orderClothDtos)
-      .flatMap(orderClothDto -> Mono.fromCallable(() -> orderClothRepository.save(orderClothDto.createOrderCloth(orderClothDto))))
-      .then();
+  public void createOrderCloth(List<OrderClothDto> orderClothDtos) {
+    for(OrderClothDto orderClothDto : orderClothDtos) {
+      orderClothRepository.save(orderClothDto.createOrderCloth(orderClothDto));
+    }
   }
 
-  public Flux<OrderListResponseDto> getOrderList(Long memberId) {
-    return orderRepository.findAllByMemberId(memberId)
-      .flatMap(order -> {
-        List<Long> ids = order.getOrderCloths().stream().map(OrderCloth::getClothDetailId).toList();
-        return clothServiceClient.getClothDetails(ids)
-          .flatMapMany(clothDetails -> {
-            List<ClothDetailResponseDto> clothDetailResponseDtos = order.getOrderCloths().stream()
-              .map(orderCloth -> clothDetails.getData().stream()
-                .filter(clothDetail -> clothDetail.getClothDetailId().equals(orderCloth.getClothDetailId()))
-                .findFirst()
-                .orElseThrow(() -> new CustomException(OrderExceptionEnum.CLOTH_DETAIL_NOT_FOUND)))
-              .toList();
-            return Mono.just(OrderListResponseDto.builder()
-              .orderId(order.getId())
-              .orderStatus(order.getOrderStatus())
-              .address(order.getOrderAddress().getAddress())
-              .addressDetail(order.getOrderAddress().getAddressDetail())
-              .orderDate(order.getOrderDate())
-              .deliveryDate(order.getDeliveryDate())
-              .totalPrice(clothDetailResponseDtos.stream().mapToInt(ClothDetailResponseDto::getPrice).sum())
-              .clothDetailResponseDtos(clothDetailResponseDtos)
-              .build());
-          });
-      })
-      .filter(orderListResponseDto -> orderListResponseDto.getOrderStatus() != OrderStatus.INITIATED);
+
+  @Transactional
+  public List<OrderListResponseDto> getOrderList(Long memberId) {
+    List<Order> list = orderRepository.findAllByMemberId(memberId);
+    List<Long> ids = list.stream().map(Order::getOrderCloths).flatMap(orderCloths -> orderCloths.stream().map(OrderCloth::getClothDetailId)).toList();
+
+    CommonResponseDto<List<ClothDetailResponseDto>> clothDetails = clothServiceClient.getClothDetails(ids);
+
+    List<OrderListResponseDto> data = list.stream().map(order -> {
+      List<OrderCloth> orderCloths = order.getOrderCloths();
+      List<ClothDetailResponseDto> clothDetailResponseDtos =
+        orderCloths.stream().map(orderCloth -> clothDetails.getData().stream()
+        .filter(clothDetail -> clothDetail.getClothDetailId().equals(orderCloth.getClothDetailId()))
+        .findFirst()
+        .orElseThrow(() -> new CustomException(OrderExceptionEnum.CLOTH_DETAIL_NOT_FOUND))).toList();
+      System.out.println(order.getOrderAddress());
+      return OrderListResponseDto.builder()
+        .orderId(order.getId())
+        .orderStatus(order.getOrderStatus())
+        .address(order.getOrderAddress().getAddress())
+        .addressDetail(order.getOrderAddress().getAddressDetail())
+        .orderDate(order.getOrderDate())
+        .deliveryDate(order.getDeliveryDate())
+        .totalPrice(clothDetailResponseDtos.stream().mapToInt(ClothDetailResponseDto::getPrice).sum())
+        .clothDetailResponseDtos(clothDetailResponseDtos)
+        .build();
+    }).filter(
+      orderListResponseDto -> orderListResponseDto.getOrderStatus() != OrderStatus.INITIATED
+    ).toList();
+
+    return data;
   }
 
-  public Mono<Void> updateOrderStatus(Long orderId, OrderStatus status) {
-    return orderRepository.findById(orderId)
-      .switchIfEmpty(Mono.error(new CustomException(OrderExceptionEnum.ORDER_NOT_FOUND)))
-      .doOnNext(order -> order.updateStatus(status))
-      .flatMap(orderRepository::save)
-      .then();
+  public void updateOrderStatus(Long orderId, OrderStatus status) {
+    Order order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(OrderExceptionEnum.ORDER_NOT_FOUND));
+    order.updateStatus(status);
+    orderRepository.save(order);
   }
 
-  public Flux<OrderCloth> getOrderClothByOrderId(Long orderId) {
-    return orderRepository.findById(orderId)
-      .switchIfEmpty(Mono.error(new CustomException(OrderExceptionEnum.ORDER_NOT_FOUND)))
-      .flatMapMany(orderClothRepository::findByOrder);
+  public List<OrderCloth> getOrderClothByOrderId(Long orderId) {
+    Order order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(OrderExceptionEnum.ORDER_NOT_FOUND));
+    return orderClothRepository.findByOrder(order);
   }
 
-  public Mono<Order> getOrderById(Long orderId) {
-    return orderRepository.findById(orderId)
-      .switchIfEmpty(Mono.error(new CustomException(OrderExceptionEnum.ORDER_NOT_FOUND)));
+  public Order getOrderById(Long orderId) {
+    return orderRepository.findById(orderId).orElseThrow(() -> new CustomException(OrderExceptionEnum.ORDER_NOT_FOUND));
   }
+
+
 }
