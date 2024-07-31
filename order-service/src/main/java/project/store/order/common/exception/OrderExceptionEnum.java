@@ -7,7 +7,10 @@ import lombok.Getter;
 public enum OrderExceptionEnum { // 예외 발생시, body에 실어 날려줄 상태, code, message 커스텀
   ORDER_NOT_FOUND("420", "ORDER_001", "해당되는 id 의 결제 정보를 찾을 수 없습니다."),
   CLOTH_DETAIL_NOT_FOUND("421", "ORDER_002", "해당되는 id 의 옷 정보를 찾을 수 없습니다."),
-  CLOTH_INVENTORY_NOT_ENOUGH("422", "ORDER_003", "해당되는 id 의 옷 재고가 부족합니다.");
+  CLOTH_INVENTORY_NOT_ENOUGH("422", "ORDER_003", "해당되는 id 의 옷 재고가 부족합니다."),
+  ORDER_FAILED("423", "ORDER_004", "주문에 실패하였습니다."),
+  ORDER_STATUS_CANCEL_NOT_ALLOWED("424", "ORDER_005", "주문 취소가 불가능한 상태입니다.");
+
 
 
   // 1. status = 날려줄 상태코드

@@ -2,14 +2,19 @@ package project.store.order.service.facade;
 
 
 import jakarta.transaction.Transactional;
+import jakarta.transaction.UserTransaction;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
+import javax.naming.InitialContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.ReactiveTransactionManager;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import project.store.order.api.dto.request.OrderFromWishListRequestDto;
 import project.store.order.api.dto.request.OrderRequestDto;
-import project.store.order.api.dto.response.ClothDetailResponseDto;
 import project.store.order.client.ClothServiceClient;
 import project.store.order.common.exception.CustomException;
 import project.store.order.common.exception.OrderExceptionEnum;
@@ -22,6 +27,8 @@ import project.store.order.service.OrderService;
 import project.store.order.service.WishListService;
 import project.store.order.service.dto.OrderClothDto;
 import project.store.order.service.dto.OrderDto;
+import reactor.core.publisher.Mono;
+
 
 @RequiredArgsConstructor
 @Component
@@ -29,11 +36,12 @@ public class OrderFacade {
   private final WishListService wishListService;
   private final OrderService orderService;
   private final ClothServiceClient clothServiceClient;
+  private final ReactiveTransactionManager reactiveTransactionManager;
   private final RedisUtil redisUtil;
 
-
-  @Transactional
-  public void orderFromWishList(OrderFromWishListRequestDto dto, Long memberId) {
+  @DistributedLock(key = "#dto.wishListIds")
+  public Mono<Void> orderFromWishList(OrderFromWishListRequestDto dto, Long memberId) {
+    TransactionalOperator txOperator = TransactionalOperator.create(reactiveTransactionManager);
 
     // 주문 생성
     OrderDto orderInfo = OrderDto.builder()
@@ -41,85 +49,94 @@ public class OrderFacade {
       .memberId(memberId)
       .orderStatus(OrderStatus.INITIATED)
       .build();
-    Order order = orderService.createOrder(orderInfo);
 
-    //카트에서 상품 정보 추출
-    List<WishList> wishLists = wishListService.getWishListByIds(dto.getWishListIds());
-
-    //주문 상세 넣는다 (OrderClothTable)
-    List<OrderClothDto> orderClothDtos = wishLists.stream()
-      .map(wishList -> OrderClothDto.builder()
-        .quantity(wishList.getWishlistClothCount())
-        .order(order)
-        .clothDetailId(wishList.getClothDetailId())
-        .build())
-      .toList();
-    orderService.createOrderCloth(orderClothDtos);
-
+    return orderService.createOrder(orderInfo)
+      .flatMap(order ->
+        // 카트에서 상품 정보 추출
+        wishListService.getWishListByIds(dto.getWishListIds())
+          .collectList()
+          .flatMap(wishLists -> {
+            // 주문 상세 넣는다 (OrderClothTable)
+            List<OrderClothDto> orderClothDtos = wishLists.stream()
+              .map(wishList -> OrderClothDto.builder()
+                .quantity(wishList.getWishlistClothCount())
+                .order(order)
+                .clothDetailId(wishList.getClothDetailId())
+                .build())
+              .toList();
+            return orderService.createOrderCloth(orderClothDtos);
+          })
+      )
+      .then()
+      .as(txOperator::transactional);
   }
 
-  @Transactional
+
   @DistributedLock(key = "#dto.clothDetailId")
-  public void orderFromDetail(OrderRequestDto dto, Long memberId) {
-    //재고 차감
-    boolean result = redisUtil.decreaseStock(String.valueOf(dto.getClothDetailId()), dto.getQuantity());
-    if (!result) {
-      throw new CustomException(OrderExceptionEnum.CLOTH_INVENTORY_NOT_ENOUGH);
-    }
+  public Mono<Void> orderFromDetail(OrderRequestDto dto, Long memberId) {
+    TransactionalOperator txOperator = TransactionalOperator.create(reactiveTransactionManager);
+    return redisUtil.decreaseStock(String.valueOf(dto.getClothDetailId()), dto.getQuantity())
+      .flatMap(result -> {
+        if (!result) {
+          return Mono.error(new CustomException(OrderExceptionEnum.CLOTH_INVENTORY_NOT_ENOUGH));
+        }
 
-    //주문 생성
-    OrderDto orderInfo = OrderDto.builder()
-      .orderAddress(dto.getOrderAddress())
-      .memberId(memberId)
-      .orderStatus(OrderStatus.INITIATED)
-      .build();
-    Order order = orderService.createOrder(orderInfo);
+        OrderDto orderInfo = OrderDto.builder()
+          .orderAddress(dto.getOrderAddress())
+          .memberId(memberId)
+          .orderStatus(OrderStatus.INITIATED)
+          .build();
 
-    //주문 상세 넣는다 (OrderClothTable)
-    OrderClothDto orderClothDto = OrderClothDto.builder()
-      .quantity(dto.getQuantity())
-      .order(order)
-      .clothDetailId(dto.getClothDetailId())
-      .build();
-    orderService.createOrderCloth(new ArrayList<>(List.of(orderClothDto)));
+        return orderService.createOrder(orderInfo)
+          .flatMap(order -> {
+            OrderClothDto orderClothDto = OrderClothDto.builder()
+              .quantity(dto.getQuantity())
+              .order(order)
+              .clothDetailId(dto.getClothDetailId())
+              .build();
 
+            return orderService.createOrderCloth(new ArrayList<>(List.of(orderClothDto)))
+              .then();
+          });
+      })
+      .as(txOperator::transactional)
+      .onErrorResume(e -> {
+        e.printStackTrace();
+        return redisUtil.increaseStock(String.valueOf(dto.getClothDetailId()), dto.getQuantity())
+          .then(Mono.error(new CustomException(OrderExceptionEnum.ORDER_FAILED)));
+      });
   }
 
 
-  @Transactional
-  public String cancelOrder(Long orderId, Long memberId) {
+  public Mono<Void> cancelOrder(Long orderId, Long memberId) {
+    TransactionalOperator txOperator = TransactionalOperator.create(reactiveTransactionManager);
 
-    Order order = orderService.getOrderById(orderId);
-    if(order.getOrderStatus()!=OrderStatus.PAID) {
-      return "취소는 배송 전에만 가능합니다.";
-    }
-
-    //주문 상태 변경
-    orderService.updateOrderStatus(orderId, OrderStatus.CANCEL);
-
-    //Order Detail 갯수 가져오고 재고증가
-
-    return "주문이 취소되었습니다.";
+    return orderService.getOrderById(orderId)
+      .flatMap(order -> {
+        if (order.getOrderStatus() != OrderStatus.PAID) {
+          return Mono.error(new CustomException(OrderExceptionEnum.ORDER_STATUS_CANCEL_NOT_ALLOWED));
+        }
+        // 주문 상태 변경
+        return orderService.updateOrderStatus(orderId, OrderStatus.CANCEL);
+      })
+      .as(txOperator::transactional);
   }
 
-  @Transactional
-  public String refundOrder(Long orderId, Long memberId) {
-    Order order = orderService.getOrderById(orderId);
-    if(order.getOrderStatus()!=OrderStatus.COMPLETE) {
-      return "환불은 배송 후 가능합니다.";
-    }
+  public Mono<Void> refundOrder(Long orderId, Long memberId) {
+    TransactionalOperator txOperator = TransactionalOperator.create(reactiveTransactionManager);
 
-    if (LocalDateTime.now().isBefore(order.getDeliveryDate().plusDays(1))) {
-      return "환불은 배송 완료 후 1일 이내에만 가능합니다.";
-    }
-
-    //주문 상태 변경
-    orderService.updateOrderStatus(orderId, OrderStatus.REFUND);
-
-
-    return "주문이 환불되었습니다.";
+    return orderService.getOrderById(orderId)
+      .flatMap(order -> {
+        if (order.getOrderStatus() != OrderStatus.COMPLETE) {
+          return Mono.error(new CustomException(OrderExceptionEnum.ORDER_STATUS_CANCEL_NOT_ALLOWED));
+        }
+        if (LocalDateTime.now().isBefore(order.getDeliveryDate().plusDays(1))) {
+          return Mono.error(new CustomException(OrderExceptionEnum.ORDER_STATUS_CANCEL_NOT_ALLOWED));
+        }
+        // 주문 상태 변경
+        return orderService.updateOrderStatus(orderId, OrderStatus.REFUND);
+      })
+      .as(txOperator::transactional);
   }
-
-
 
 }

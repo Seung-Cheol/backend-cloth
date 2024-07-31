@@ -78,15 +78,16 @@ public class ClothService {
     return clothDetailResponseDtos;
   }
 
-  @DistributedLock(key = "#clothDetailId")
   public void updateInventory(Long orderId, Long clothDetailId, int quantity) {
+    ClothDetail clothDetail = clothDetailRepository.findById(clothDetailId)
+      .orElseThrow(() -> new CustomException(ClothExceptionEnum.CLOTH_NOT_FOUND));
+    System.out.println(clothDetail.getInventory());
+    if(clothDetail.getInventory() < quantity) {
+      System.out.println(clothDetail.getInventory());
+      throw new CustomException(ClothExceptionEnum.INVENTORY_NOT_ENOUGH);
+    }
     try {
-      System.out.println("start");
-      ClothDetail clothDetail = clothDetailRepository.findById(clothDetailId)
-        .orElseThrow(() -> new CustomException(ClothExceptionEnum.CLOTH_NOT_FOUND));
-      if(clothDetail.getInventory() < quantity) {
-        throw new CustomException(ClothExceptionEnum.INVENTORY_NOT_ENOUGH);
-      }
+      System.out.println(clothDetail.getInventory());
       clothDetail.updateInventory(clothDetail.getInventory() - quantity);
       clothDetailRepository.save(clothDetail);
     } catch (Exception e) {

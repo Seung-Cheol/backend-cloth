@@ -80,7 +80,7 @@ public class OrderServiceTest {
         .build())
         .orderStatus(OrderStatus.INITIATED)
         .build()
-      );
+      ).block();
     //then
     assertNotNull(result);
     assertEquals(result.getOrderStatus(), OrderStatus.INITIATED);

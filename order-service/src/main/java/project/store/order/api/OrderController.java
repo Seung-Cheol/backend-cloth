@@ -18,6 +18,8 @@ import project.store.order.common.CommonResponseDto;
 import project.store.order.domain.entity.Order;
 import project.store.order.service.OrderService;
 import project.store.order.service.facade.OrderFacade;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("order")
@@ -28,49 +30,53 @@ public class OrderController {
   private final OrderService orderService;
 
   @PostMapping("/add")
-  public CommonResponseDto<String> addOrder(
+  public Mono<CommonResponseDto<?>> addOrder(
     @RequestHeader("id") Long memberId,
     @RequestBody OrderRequestDto dto) {
-    orderFacade.orderFromDetail(dto, memberId);
-    return new CommonResponseDto<>();
+    return Mono.fromCallable(() -> {
+      orderFacade.orderFromDetail(dto, memberId);
+      return new CommonResponseDto<>();
+    });
   }
 
   @PostMapping("/add/WishList")
-  public CommonResponseDto<String> addOrderFromWishList(
+  public Mono<CommonResponseDto<String>> addOrderFromWishList(
     @RequestHeader("id") Long memberId,
     OrderFromWishListRequestDto dto) {
-    orderFacade.orderFromWishList(dto, memberId);
-    return new CommonResponseDto<>();
+    return Mono.fromCallable(() -> {
+      orderFacade.orderFromWishList(dto, memberId);
+      return new CommonResponseDto<>();
+    });
   }
 
-
   @PutMapping("cancel")
-  public CommonResponseDto<?> cancelOrder(
-    Long orderId, @RequestHeader("id") Long memberId){
-    orderFacade.cancelOrder(orderId,memberId);
-    return new CommonResponseDto<>();
+  public Mono<CommonResponseDto<?>> cancelOrder(
+    Long orderId, @RequestHeader("id") Long memberId) {
+    return Mono.fromCallable(() -> {
+      orderFacade.cancelOrder(orderId, memberId);
+      return new CommonResponseDto<>();
+    });
   }
 
   @PutMapping("refund")
-  public CommonResponseDto<?> refundOrder(
-    Long orderId, @RequestHeader("id") Long memberId
-  ) {
-    orderFacade.refundOrder(orderId, memberId);
-    return new CommonResponseDto<>();
+  public Mono<CommonResponseDto<?>> refundOrder(
+    Long orderId, @RequestHeader("id") Long memberId) {
+    return Mono.fromCallable(() -> {
+      orderFacade.refundOrder(orderId, memberId);
+      return new CommonResponseDto<>();
+    });
   }
 
-
   @GetMapping("/detail/{orderId}")
-  public CommonResponseDto<Order> getOrderDetail(
+  public Mono<CommonResponseDto<Order>> getOrderDetail(
     @PathVariable Long orderId) {
-    Order data = orderService.getOrderById(orderId);
-    return CommonResponseDto.ofSuccess(data);
+    return orderService.getOrderById(orderId)
+      .map(CommonResponseDto::ofSuccess);
   }
 
   @GetMapping("/list/{memberId}")
-  public CommonResponseDto<List<OrderListResponseDto>> getOrderList(@PathVariable Long memberId) {
-    List<OrderListResponseDto> data = orderService.getOrderList(memberId);
-    return CommonResponseDto.ofSuccess(data);
+  public Flux<CommonResponseDto<OrderListResponseDto>> getOrderList(@PathVariable Long memberId) {
+    return orderService.getOrderList(memberId)
+      .map(CommonResponseDto::ofSuccess);
   }
-
 }

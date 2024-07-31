@@ -6,11 +6,14 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.Mapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import project.store.cloth.api.dto.request.OrderRequestDto;
 import project.store.cloth.api.dto.response.ClothResponseDto;
 import project.store.cloth.api.dto.response.ClothListResponseDto;
 import project.store.cloth.common.CommonResponseDto;
@@ -43,5 +46,11 @@ public class ClothController {
   @PostMapping("/details")
   public CommonResponseDto<?> getClothDetails(@RequestBody List<Long> clothDetailIds) {
     return CommonResponseDto.ofSuccess(clothService.getClothDetails(clothDetailIds));
+  }
+
+  @PutMapping("/inventory")
+  public CommonResponseDto<?> updateInventory(@RequestBody OrderRequestDto orderRequestDto) {
+    clothService.updateInventory(orderRequestDto.getOrderId(), orderRequestDto.getClothDetailId(), orderRequestDto.getQuantity());
+    return CommonResponseDto.ofSuccess(null);
   }
 }

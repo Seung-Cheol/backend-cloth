@@ -29,7 +29,7 @@ public class JwtTokenProvider {
 
   private final RedisUtil redisUtil;
 
-  private Long EXPIRATION_MILLISECONDS = 1000 * 60 * 5L;
+  private Long EXPIRATION_MILLISECONDS = 1000 * 60 * 60L;
 
   private Long REFRESH_EXPIRATION_MILLISECONDS = 1000 * 60 * 24 * 30L;
 

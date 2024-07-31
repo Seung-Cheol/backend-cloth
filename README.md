@@ -9,7 +9,7 @@
 - **프레임워크**: Spring Boot
 - **데이터베이스**: Postgresql, Redis
 - **메시지 브로커**: Kafka
-- **API 관리**: Spring Cloud Netflix
+- **API 관리**: Spring Cloud Netflix Eureka
 - **인증 및 인가**: JWT, Spring Security
 - **부하 테스트**: JMeter
 
@@ -27,22 +27,32 @@
 ### API 명세서
 ---
 #### 사용자 관리
-- **POST /auth/login**
-    - 설명: 사용자 로그인
-    - 요청 본문: `{ "username": "user", "password": "pass" }`
-    - 응답: `{ "token": "jwt_token" }`
-- **POST /auth/register**
-    - 설명: 사용자 등록
-    - 요청 본문: `{ "username": "user", "password": "pass", "email": "email@example.com" }`
-    - 응답: `{ "message": "User registered successfully" }`
+- **POST /member/login**
+  - 사용자 로그인
+- **POST /member/join**
+  - 회원가입
+- **POST /member/email/send**
+  - 인증번호 메일 보내기
+- **POST /member/email/verify**
+  - 인증번호 확인하기
+- **GET /member/refresh**
+  - 토큰 리프레시
+- **GET /member/mypage**
+  - 내 정보 확인
+- **PUT /member/mypage**
+  - 내 정보 수정
+- **PATCH /member/password**
+  - 비밀번호 수정
+- **DELETE /member/logout**
+  - 해당 기기에서 로그아웃
+- **DELETE /member/logout/all**
+  - 전체 기기에서 로그아웃
 
 #### 상품 관리
 - **GET /products**
     - 설명: 모든 상품 조회
-    - 응답: `[ { "id": 1, "name": "Product 1", "price": 100.0, "stock": 50 }, ... ]`
 - **GET /products/{id}**
     - 설명: 특정 상품 상세 조회
-    - 응답: `{ "id": 1, "name": "Product 1", "price": 100.0, "stock": 50 }`
 
 #### 주문 관리
 - **POST /orders**

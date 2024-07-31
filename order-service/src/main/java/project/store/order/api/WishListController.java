@@ -18,6 +18,7 @@ import project.store.order.api.dto.request.WishListUpdateRequestDto;
 import project.store.order.api.dto.response.WishListResponseDto;
 import project.store.order.common.CommonResponseDto;
 import project.store.order.service.WishListService;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("wishlist")
@@ -27,33 +28,33 @@ public class WishListController {
   private final WishListService wishListService;
 
   @PostMapping("/add")
-  public CommonResponseDto<String> addWishList(
+  public Mono<CommonResponseDto<String>> addWishList(
     @RequestHeader("id") Long memberId,
     @Valid @RequestBody WishListAddRequestDto wishListAddRequestDto) {
-    wishListService.addWishList(memberId, wishListAddRequestDto);
-    return new CommonResponseDto<>();
+    return wishListService.addWishList(memberId, wishListAddRequestDto)
+      .thenReturn(new CommonResponseDto<>());
   }
 
   @GetMapping("/list/{memberId}")
-  public CommonResponseDto<List<WishListResponseDto>> getWishList(
+  public Mono<CommonResponseDto<List<WishListResponseDto>>> getWishList(
     @PathVariable Long memberId) {
-    List<WishListResponseDto> data = wishListService.getWishList(memberId);
-    return CommonResponseDto.ofSuccess(data);
+    return wishListService.getWishList(memberId)
+      .collectList()
+      .map(CommonResponseDto::ofSuccess);
   }
 
   @PutMapping("/update")
-  public CommonResponseDto<?> updateWishList(
+  public Mono<CommonResponseDto<?>> updateWishList(
     @RequestHeader("id") Long memberId,
     @RequestBody WishListUpdateRequestDto wishListUpdateRequestDto) {
-    wishListService.updateWishList(wishListUpdateRequestDto, memberId);
-    return new CommonResponseDto<>();
+    return wishListService.updateWishList(wishListUpdateRequestDto, memberId)
+      .thenReturn(new CommonResponseDto<>());
   }
 
   @DeleteMapping("/delete")
-  public CommonResponseDto<String> deleteWishList(
-    @RequestHeader("id") Long memberId, Long WishListId) {
-    wishListService.deleteWishList(WishListId, memberId);
-    return new CommonResponseDto<>();
+  public Mono<CommonResponseDto<String>> deleteWishList(
+    @RequestHeader("id") Long memberId, Long wishListId) {
+    return wishListService.deleteWishList(wishListId, memberId)
+      .thenReturn(new CommonResponseDto<>());
   }
-
 }

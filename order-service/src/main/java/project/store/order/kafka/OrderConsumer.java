@@ -17,6 +17,7 @@ import project.store.order.domain.entity.OrderStatus;
 import project.store.order.domain.repository.OrderOutboxRepository;
 import project.store.order.domain.repository.OrderRepository;
 import project.store.order.kafka.dto.ClothDetailDto;
+import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
@@ -28,39 +29,39 @@ public class OrderConsumer {
   private final String rollbackTopic = "payment_rollback";
 
   @KafkaListener(topics = "payment_complete")
-  @Transactional
   public void consume(String message) throws JsonProcessingException {
     ObjectMapper objectMapper = new ObjectMapper();
     Long orderId = Long.parseLong(message);
-    try {
-      Order order = orderRepository.findById(orderId)
-        .orElseThrow(() -> new EntityNotFoundException("Order not found for ID: " + orderId));
+    orderRepository.findById(orderId)
+      .switchIfEmpty(Mono.error(new EntityNotFoundException("Order not found for ID: " + orderId)))
+      .flatMap(order -> {
+        List<ClothDetailDto> dtos = order.getOrderCloths().stream()
+          .map(orderCloth -> ClothDetailDto.builder()
+            .orderId(order.getId())
+            .clothDetailId(orderCloth.getClothDetailId())
+            .quantity(orderCloth.getOrderClothCount())
+            .build())
+          .collect(Collectors.toList());
 
-      List<ClothDetailDto> dtos = order.getOrderCloths().stream()
-        .map(orderCloth -> ClothDetailDto.builder()
-          .orderId(order.getId())
-          .clothDetailId(orderCloth.getClothDetailId())
-          .quantity(orderCloth.getOrderClothCount())
-          .build())
-        .collect(Collectors.toList());
-
-      order.updateStatus(OrderStatus.PAID);
-      orderRepository.save(order);
-
-      saveOrderOutbox(topic, objectMapper.writeValueAsString(dtos));
-    } catch (Exception e) {
-      saveOrderOutbox(rollbackTopic, message);
-      throw e;
-    }
-    orderProducer.send();
+        order.updateStatus(OrderStatus.PAID);
+        try {
+          return orderRepository.save(order)
+            .then(saveOrderOutbox(topic, objectMapper.writeValueAsString(dtos)));
+        } catch (JsonProcessingException e) {
+          throw new RuntimeException(e);
+        }
+      })
+      .onErrorResume(e -> saveOrderOutbox(rollbackTopic, message).then(Mono.error(e)))
+      .doOnTerminate(orderProducer::send)
+      .subscribe();
   }
 
-  private void saveOrderOutbox(String topic, String message) {
+  private Mono<OrderOutbox> saveOrderOutbox(String topic, String message) {
     OrderOutbox outboxEntry = OrderOutbox.builder()
       .topic(topic)
       .message(message)
       .isSent(false)
       .build();
-    orderOutboxRepository.save(outboxEntry);
+    return orderOutboxRepository.save(outboxEntry);
   }
 }
